@@ -61,6 +61,15 @@ export default function SiteNav() {
 
           <div className="hidden shrink-0 items-center gap-5 md:flex">
             <Link
+              href="/find"
+              aria-current={pathname === "/find" ? "page" : undefined}
+              className={`text-[13px] transition-colors ${
+                pathname === "/find" ? "font-semibold text-ink" : "text-ink-2 hover:text-ink"
+              }`}
+            >
+              내 조건
+            </Link>
+            <Link
               href="/link"
               aria-current={pathname === "/link" ? "page" : undefined}
               className={`text-[13px] transition-colors ${
@@ -145,6 +154,9 @@ export default function SiteNav() {
             <div className="mt-2 flex gap-6 border-t border-hair pt-3 pb-2">
               <Link href="/" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 두 기준 견주기
+              </Link>
+              <Link href="/find" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+                내 조건
               </Link>
               <Link href="/link" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 종합
