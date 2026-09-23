@@ -24,8 +24,7 @@ export default function AboutPage() {
           <ul className="space-y-1.5">
             <Li>
               <b className="font-semibold text-ink">온통청년</b> — 공개 정책검색 결과 {meta.total.toLocaleString("ko-KR")}건
-              (중앙부처 {meta.central}건, 지방자치단체 {meta.local.toLocaleString("ko-KR")}건). 화면 첫 표시 건수(약 3,981건)와
-              차이가 있는데, 검색 색인에 들어 있지 않은 등록분으로 보입니다.
+              (중앙부처 {meta.central}건, 지방자치단체 {meta.local.toLocaleString("ko-KR")}건). 온통청년 검색 화면에 표시되는 건수와 같습니다(지역 필터 결과도 일치 확인).
             </Li>
             <Li>
               <b className="font-semibold text-ink">보조금24</b> — 공공데이터포털 「행정안전부_대한민국 공공서비스(혜택) 정보」 목록·상세·지원조건.
