@@ -18,7 +18,7 @@ export default function SiteFooter({ source }: { source: string }) {
               신청 전 소관기관 공고와 온통청년·보조금24 원문을 반드시 확인하세요.
             </p>
             <div className="mt-4 flex gap-5 text-[12.5px] text-ink-2">
-              <Link href="/" className="hover:text-ink">두 기준 견주기</Link>
+              <Link href="/" className="hover:text-ink">처음으로</Link>
               <Link href="/about" className="hover:text-ink">자료</Link>
               <a
                 href="https://www.youthcenter.go.kr"

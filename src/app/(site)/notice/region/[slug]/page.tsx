@@ -7,6 +7,7 @@ import {
   josa,
 } from "@/lib/design";
 import RegionTable from "@/components/RegionTable";
+import { toListProgram } from "@/lib/types";
 import RegionLocator from "@/components/RegionLocator";
 import Crumbs from "@/components/Crumbs";
 
@@ -214,7 +215,7 @@ export default async function NoticeRegionPage({
           </Link>
         </div>
         <div className="mt-5">
-          <RegionTable programs={items} />
+          <RegionTable programs={items.map(toListProgram)} />
         </div>
       </section>
 

@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   description: "청년대장이 무엇을 담고 무엇을 담지 않는지, 연결은 얼마나 정확한지.",
 };
 
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "/youth-ledger";
+const DOWNLOADS = [
+  { file: "policies.csv", title: "온통청년 정책별 연결표", body: "정책마다 기본계획 과제번호, 보조금24 서비스ID(연결 방식), 이어지는 예산서 세부사업 코드, 같은 사업의 다른 등록 번호." },
+  { file: "budget.csv", title: "예산서 청년 세부사업 대조표", body: "세부사업마다 예산·집행과 온통청년 대응 정책(자동 판정), 없으면 이름이 가장 가까운 후보와 유사도." },
+  { file: "gov24.csv", title: "온통청년과 이어지지 않은 보조금24 청년 관련 서비스", body: "자동 대조로 짝을 찾지 못한 서비스. 표본 확인에서 약 3분의 1은 청년이 주 대상이 아니었으므로 검토용으로 쓰세요." },
+];
+
 export default function AboutPage() {
   const est = fiscal.meta.absentEstimate;
   return (
@@ -36,14 +43,14 @@ export default function AboutPage() {
               <b className="font-semibold text-ink">열린재정</b> — 세부사업 일별 집행현황(2026, 9월 14일 기준)의 중앙 세부사업.
             </Li>
             <Li>
-              <b className="font-semibold text-ink">KOSIS 주민등록인구</b> — 행정구역(읍면동)별/5세별 주민등록인구에서 20~39세를 청년 인구로 셌습니다(종합 화면의 청년 1인당 예산). 정책의 청년 정의는 대개 19~39세라 조금 다릅니다.
+              <b className="font-semibold text-ink">KOSIS 주민등록인구</b> — 행정구역(읍면동)별/5세별 주민등록인구에서 20~39세를 청년 인구로 셌습니다(종합 화면의 청년 1인당 예산). 청년기본법상 청년은 19~34세이고 지자체 조례는 대부분 39세 이하라, 5세 구간 중 조례 기준에 가까운 쪽을 썼습니다.
             </Li>
             <Li>
               <b className="font-semibold text-ink">지도 경계</b> — SGIS 2020 시군구 경계. 2026년 신설된 인천 영종·제물포·서해·검단구는 경계가 없어 지도에서 비어 있습니다.
             </Li>
             <Li>
               <b className="font-semibold text-ink">집행 추이</b> — 지방재정365를 매주(6월 10일부터 매일) 받아 둔 스냅샷{" "}
-              {exec.meta.days}개에서 누적 지출을 이었습니다.
+              {exec.meta.days}개에서 누적 지출을 이었습니다. 세부사업 카드의 집행 추이는 주 단위 시점으로 그렸고, 중앙은 열린재정의 당월 누계 집행액을 이었습니다.
             </Li>
           </ul>
           <p>
@@ -98,10 +105,31 @@ export default function AboutPage() {
               <b className="font-semibold text-ink">예산서 ↔ 온통청년(중앙)</b> — 건수가 적고 금액이 커서 한 건씩 대조했습니다.
             </Li>
           </ul>
+          <ul className="space-y-1.5">
+            <Li>
+              <b className="font-semibold text-ink">청년 세부사업의 범위</b> — 세부사업명에 ‘청년’ 또는 대학생·자립준비·보호종료 등이 들어간 사업입니다.
+              이름만 보는 최소 범위이고, 노인 대상 ‘청춘’ 사업(청춘극장·청춘대학 등), 부서 기본경비·인력운영비, 청년회의소 지원은 뺐습니다.
+            </Li>
+          </ul>
           <p>
-            1:1 연결이 어려운 가장 큰 이유는 온통청년의 중복 등록입니다. 같은 국가사업이 연도·부서·모집 차수별로 이름을 바꿔 여러 번
-            등록돼 있습니다. 정책마다 예산 코드와 보조금24 서비스ID를 등록 단계에서 받으면 이 문제는 사라집니다.
+            1:1 연결이 어려운 가장 큰 이유는 온통청년에 회차·지역 항목이 없어 같은 사업이 해마다·지역마다 새 건으로 등록되는 구조입니다.
+            정책마다 바뀌지 않는 ID를 두고 예산 코드와 보조금24 서비스ID를 함께 받으면 이 문제는 사라집니다.
           </p>
+        </Section>
+
+        <Section title="내려받기">
+          <p>이 시제품이 이어 본 결과를 표로 내려받을 수 있습니다. 엑셀에서 바로 열리는 UTF-8(BOM) CSV입니다. 연결은 자동 대조 결과이므로 확인용 목록으로 쓰세요.</p>
+          <ul className="space-y-2">
+            {DOWNLOADS.map((d) => (
+              <li key={d.file} className="rounded-[14px] border border-hair bg-card p-4">
+                <a href={`${BASE}/data/csv/${d.file}`} download className="text-[15px] font-semibold text-ink underline underline-offset-2">
+                  {d.title}
+                </a>
+                <span className="ml-2 text-[12px] text-ink-3">{d.file}</span>
+                <p className="mt-1 text-[13px] leading-[1.65] text-ink-3">{d.body}</p>
+              </li>
+            ))}
+          </ul>
         </Section>
 
         <Section title="한계">

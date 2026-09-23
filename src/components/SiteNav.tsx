@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BASES, BASIS_LIST, basisOf, counterpart } from "@/lib/basis";
+import SearchDialog from "@/components/SearchDialog";
 
 /**
  * 헤더가 계층을 그대로 보여 준다.
@@ -47,19 +48,21 @@ export default function SiteNav() {
                   href={basis ? counterpart(pathname, b.key) : b.home}
                   aria-current={on ? "true" : undefined}
                   title={b.gloss}
-                  className={`px-3.5 py-1.5 text-[12.5px] transition-colors md:px-4 ${
+                  className={`px-3 py-1.5 text-[12.5px] whitespace-nowrap transition-colors sm:px-3.5 md:px-4 ${
                     on
                       ? "bg-ink font-semibold text-onink"
                       : "font-medium text-ink-2 hover:bg-wash"
                   }`}
                 >
-                  {b.label}
+                  <span className="sm:hidden">{b.short}</span>
+                  <span className="hidden sm:inline">{b.label}</span>
                 </Link>
               );
             })}
           </nav>
 
           <div className="hidden shrink-0 items-center gap-5 md:flex">
+            <SearchDialog />
             <Link
               href="/find"
               aria-current={pathname === "/find" ? "page" : undefined}
@@ -107,15 +110,18 @@ export default function SiteNav() {
             </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
-            className="shrink-0 text-[13px] text-ink-2 md:hidden"
-          >
-            {open ? "닫기" : "메뉴"}
-          </button>
+          <div className="flex shrink-0 items-center gap-3 md:hidden">
+            <SearchDialog compact />
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-label={open ? "메뉴 닫기" : "메뉴 열기"}
+              className="text-[13px] text-ink-2"
+            >
+              {open ? "닫기" : "메뉴"}
+            </button>
+          </div>
         </div>
 
         {/* 두 번째 단. 기준 안에 들어와 있을 때만 선다. */}
@@ -169,23 +175,23 @@ export default function SiteNav() {
                 ))}
               </>
             )}
-            <div className="mt-2 flex gap-6 border-t border-hair pt-3 pb-2">
-              <Link href="/" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
-                두 기준 견주기
+            <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-1 border-t border-hair pt-2 pb-2">
+              <Link href="/" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
+                처음으로
               </Link>
-              <Link href="/find" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+              <Link href="/find" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
                 내 조건
               </Link>
-              <Link href="/link" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+              <Link href="/link" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
                 종합
               </Link>
-              <Link href="/quality" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+              <Link href="/quality" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
                 점검
               </Link>
-              <Link href="/proposal" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+              <Link href="/proposal" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
                 제안
               </Link>
-              <Link href="/about" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+              <Link href="/about" onClick={() => setOpen(false)} className="py-2 text-[14px] text-ink-2">
                 자료
               </Link>
             </div>

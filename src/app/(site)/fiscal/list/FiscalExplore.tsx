@@ -4,7 +4,10 @@ import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { FiscalMeta, FiscalProgram } from "@/lib/types";
-import { TYPE_STYLES, formatBudget, typeStyle } from "@/lib/design";
+
+/** the list never reads source/match, so the page leaves them out */
+type Row = Omit<FiscalProgram, "source" | "match">;
+import { REGION_SLUG, TYPE_STYLES, formatBudget, typeStyle } from "@/lib/design";
 
 type Sort = "budget" | "name" | "exec";
 const PAGE = 30;
@@ -14,12 +17,12 @@ const REGION_ORDER = [
   "경기", "강원", "충북", "충남", "전북", "경북", "경남", "제주",
 ];
 
-function matches(p: FiscalProgram, q: string) {
+function matches(p: Row, q: string) {
   if (!q) return true;
   return `${p.name} ${p.org} ${p.sector} ${p.region}`.toLowerCase().includes(q);
 }
 
-const rate = (p: FiscalProgram) =>
+const rate = (p: Row) =>
   p.executed != null && p.budget > 0 ? p.executed / p.budget : null;
 
 export default function FiscalExplore({
@@ -29,14 +32,14 @@ export default function FiscalExplore({
   initialSector = null,
   initialType = null,
 }: {
-  programs: FiscalProgram[];
+  programs: Row[];
   meta: FiscalMeta;
   initialRegion?: string | null;
   initialSector?: string | null;
   initialType?: string | null;
 }) {
   const params = useSearchParams();
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(params.get("q") ?? "");
   const [region, setRegion] = useState<string | null>(initialRegion ?? params.get("region"));
   // 부문은 48종이라 칩으로 늘어놓을 수 없다. 부문 페이지에서 넘어올 때만
   // 걸리고, 지우기만 가능하게 둔다.
@@ -49,21 +52,21 @@ export default function FiscalExplore({
   const [onthong, setOnthong] = useState<"all" | "absent" | "present">(
     initOnthong === "absent" || initOnthong === "present" ? initOnthong : "all",
   );
-  const onthongOk = (p: FiscalProgram) =>
+  const onthongOk = (p: Row) =>
     onthong === "all" || (onthong === "absent" ? !p.inOnthong : !!p.inOnthong);
   const [paging, setPaging] = useState({ sig: "", shown: PAGE });
 
   const dq = useDeferredValue(q.trim().toLowerCase());
 
   const facets = useMemo(() => {
-    const pass = (p: FiscalProgram, skip: "region" | "type" | "level") =>
+    const pass = (p: Row, skip: "region" | "type" | "level") =>
       matches(p, dq) &&
       (skip === "region" || !region || p.region === region) &&
       (skip === "type" || !type || p.type === type) &&
       (skip === "level" || !level || p.level === level) &&
       (!sector || p.sector === sector) &&
       onthongOk(p);
-    const count = <T,>(skip: Parameters<typeof pass>[1], key: (p: FiscalProgram) => T) => {
+    const count = <T,>(skip: Parameters<typeof pass>[1], key: (p: Row) => T) => {
       const m = new Map<T, number>();
       for (const p of programs) if (pass(p, skip)) m.set(key(p), (m.get(key(p)) ?? 0) + 1);
       return m;
@@ -309,9 +312,12 @@ export default function FiscalExplore({
                   return (
                     <tr key={p.id}>
                       <td className="border-b border-hair py-3 pr-4 align-top">
-                        <span className="block text-[14.5px] leading-snug font-semibold tracking-[-0.01em]">
+                        <Link
+                          href={`/fiscal/program/?id=${p.id}&r=${REGION_SLUG[p.region] ?? "central"}`}
+                          className="block text-[14.5px] leading-snug font-semibold tracking-[-0.01em] hover:underline"
+                        >
                           {p.name}
-                        </span>
+                        </Link>
                         {p.inOnthong ? (
                           <span className="mt-1 block text-[11.5px] leading-snug text-ink-3">
                             온통청년 · {p.onthongName ?? "대응 정책 있음"}

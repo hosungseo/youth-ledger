@@ -9,11 +9,13 @@ import vendorsRaw from "../../data/vendors.json";
 import linkRaw from "../../data/link.json";
 import sigunguRaw from "../../data/sigungu-geo.json";
 import qualityRaw from "../../data/quality.json";
+import recordsRaw from "../../data/records.json";
 import type {
   ExecData,
   FiscalMeta,
   FiscalProgram,
   LinkData,
+  PolicyRecord,
   QualityData,
   Meta,
   Program,
@@ -67,3 +69,7 @@ export const sigunguGeo = sigunguRaw as unknown as {
 
 /** 온통청년 자체 데이터 점검 — 매칭 없이 센 것만. */
 export const quality = qualityRaw as unknown as QualityData;
+
+/** Inventory record of one 온통청년 policy — only the policy page reads it (build time). */
+const records = recordsRaw as unknown as Record<string, PolicyRecord>;
+export const getRecord = (id: string): PolicyRecord | undefined => records[id];

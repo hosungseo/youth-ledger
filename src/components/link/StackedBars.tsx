@@ -66,15 +66,17 @@ export default function StackedBars({
           return (
             <div
               key={r.key}
-              className="relative flex items-center gap-3"
+              // narrow screens: label + total on one line, the bar full width below; wider: one row
+              className="relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-3 gap-y-1.5 sm:flex sm:items-center sm:gap-3"
+              style={{ "--lw": labelWidth } as React.CSSProperties}
               onMouseEnter={() => setHover(r.key)}
               onMouseLeave={() => setHover(null)}
             >
-              <span className="shrink-0 text-[12.5px] leading-tight" style={{ width: labelWidth }}>
+              <span className="min-w-0 text-[12.5px] leading-tight sm:w-[var(--lw)] sm:shrink-0">
                 <span className="block font-semibold">{r.label}</span>
                 {r.sub && <span className="block text-[11px] text-ink-3">{r.sub}</span>}
               </span>
-              <span className="flex h-7 flex-1">
+              <span className="col-span-2 flex h-7 sm:order-1 sm:flex-1">
               <span className="flex h-7 gap-[2px]" style={{ width: mode === "absolute" ? `${(total / max) * 100}%` : "100%" }}>
                 {series.map((s, i) => {
                   const v = r.values[s.key] ?? 0;
@@ -101,10 +103,10 @@ export default function StackedBars({
                 })}
               </span>
               </span>
-              <span className="tnum w-[5.5rem] shrink-0 text-right text-[12px] font-semibold">{fmt(total)}</span>
+              <span className="tnum row-start-1 text-right text-[12px] font-semibold sm:order-2 sm:w-[5.5rem] sm:shrink-0">{fmt(total)}</span>
 
               {on && (
-                <div className="pointer-events-none absolute top-full left-[8rem] z-10 mt-1 min-w-[220px] rounded-[12px] border border-hair bg-card p-3 text-[12px] shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
+                <div className="pointer-events-none absolute top-full left-0 z-10 sm:left-[8rem] mt-1 min-w-[220px] rounded-[12px] border border-hair bg-card p-3 text-[12px] shadow-[0_6px_20px_rgba(0,0,0,0.12)]">
                   <p className="font-bold">{r.label}</p>
                   <ul className="mt-1.5 space-y-0.5">
                     {series.map((s) => (

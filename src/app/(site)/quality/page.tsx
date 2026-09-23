@@ -85,7 +85,7 @@ export default function QualityPage() {
           구조의 문제로 보입니다(운영기관 확인 필요). 지난해 정책의 새 회차를 먼저 등록할 수 있으면 풀립니다.
         </p>
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[20px] border border-hair bg-card p-6">
+          <div className="min-w-0 rounded-[20px] border border-hair bg-card p-6">
             <h3 className="text-[14px] font-bold">마감 시기별 등록 시점 <span className="text-[11.5px] font-normal text-ink-3">2026년 마감분</span></h3>
             <div className="mt-4">
               <StackedBars
@@ -98,7 +98,7 @@ export default function QualityPage() {
               />
             </div>
           </div>
-          <div className="rounded-[20px] border border-hair bg-card p-6">
+          <div className="min-w-0 rounded-[20px] border border-hair bg-card p-6">
             <h3 className="text-[14px] font-bold">월별 신규 등록 <span className="text-[11.5px] font-normal text-ink-3">2026년은 {q.asof}까지</span></h3>
             <MonthBars a={s.regsByMonth2025} b={s.regsByMonth2026.slice(0, 9)} />
           </div>
@@ -124,7 +124,7 @@ export default function QualityPage() {
           />
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-          <div className="rounded-[20px] border border-hair bg-card p-6">
+          <div className="min-w-0 rounded-[20px] border border-hair bg-card p-6">
             <h3 className="text-[14px] font-bold">가장 많이 나뉘어 등록된 사업</h3>
             <ol className="mt-3 border-t border-hair">
               {q.dupTop.slice(0, 8).map((x) => (
@@ -140,7 +140,7 @@ export default function QualityPage() {
               ))}
             </ol>
           </div>
-          <div className="rounded-[20px] border border-hair bg-card p-6">
+          <div className="min-w-0 rounded-[20px] border border-hair bg-card p-6">
             <h3 className="text-[14px] font-bold">여러 기관이 따로 올린 같은 사업</h3>
             <ol className="mt-3 border-t border-hair">
               {q.crossAgency.slice(0, 8).map((c) => (
@@ -171,15 +171,15 @@ export default function QualityPage() {
         </p>
         <ol className="mt-5 max-w-[920px] space-y-2.5">
           {fieldsNow.map((f) => (
-            <li key={f.k} className="flex items-center gap-3 text-[13px]">
-              <span className="w-[17rem] shrink-0">
+            <li key={f.k} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-[13px] sm:flex">
+              <span className="col-span-2 min-w-0 sm:w-[17rem] sm:shrink-0">
                 <span className="block font-semibold">{f.k}</span>
                 <span className="block text-[11px] leading-[1.5] text-ink-3">{f.note}</span>
               </span>
               <span className="relative h-5 flex-1 bg-wash">
                 <span className="absolute inset-y-0 left-0 rounded-r-[4px]" style={{ width: `${(f.v / f.of) * 100}%`, background: C1 }} />
               </span>
-              <span className="tnum w-[8.5rem] shrink-0 text-right">
+              <span className="tnum text-right sm:w-[8.5rem] sm:shrink-0">
                 <b>{n(f.v)}</b> <span className="text-ink-3">/ {n(f.of)} · {pct(f.v, f.of)}</span>
               </span>
             </li>
@@ -192,15 +192,15 @@ export default function QualityPage() {
         </p>
         <ol className="mt-4 max-w-[920px] space-y-2">
           {legacy.map((f) => (
-            <li key={f.k} className="flex items-center gap-3 text-[13px]">
-              <span className="w-[17rem] shrink-0">
+            <li key={f.k} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 text-[13px] sm:flex">
+              <span className="col-span-2 min-w-0 sm:w-[17rem] sm:shrink-0">
                 <span className="block font-semibold">{f.k}</span>
                 <span className="block text-[11px] leading-[1.5] text-ink-3">{f.note}</span>
               </span>
               <span className="relative h-5 flex-1 bg-wash">
                 <span className="absolute inset-y-0 left-0 rounded-r-[4px]" style={{ width: `${(f.v / q.total) * 100}%`, background: GRAY }} />
               </span>
-              <span className="tnum w-[8.5rem] shrink-0 text-right">
+              <span className="tnum text-right sm:w-[8.5rem] sm:shrink-0">
                 <b>{n(f.v)}</b> <span className="text-ink-3">{pct(f.v, q.total)}</span>
               </span>
             </li>

@@ -344,3 +344,92 @@ export interface QualityData {
   taskNo: { filled: number; plan2: number };
   fields: { k: string; n: number; note?: string }[];
 }
+
+/** One 온통청년 policy as an inventory record (scripts/21_build_records.py → data/records.json). */
+export interface PolicyRecord {
+  plan: { cycle: number | null; way: number | null; focus: number | null; task: number | null };
+  registered: string;
+  modified: string;
+  apply: { begin: string | null; end: string | null };
+  business: { begin: string | null; end: string | null; etc: string };
+  areas: { label: string; n: number };
+  classification: string[];
+  scale: { count: number | null; limited: boolean };
+  how: string;
+  screening: string;
+  documents: string;
+  cond: {
+    age: [number | null, number | null];
+    income: string;
+    marriage: string | null;
+    employment: string[];
+    education: string[];
+    special: string[];
+    major: string[];
+    extra: string | null;
+    excluded: string | null;
+  };
+  gov24: {
+    kind: string | null;
+    deadline: string;
+    method: string;
+    office: string;
+    support: string;
+    age: [number | null, number | null];
+    income: string;
+    traits: string[];
+    household: string[];
+    direct: boolean;
+    diff: { age: string | null; income: string | null } | null;
+  } | null;
+  budget: { id: string; slug: string; name: string; org: string; level: "central" | "local"; budget: number; executed: number; strict: boolean }[];
+  same: { id: string; name: string; status: string | null; year: string; registered: string; areas: string }[];
+}
+
+/** One 청년 세부사업 as a record, fetched per region shard (public/data/fp/<slug>.json). */
+export interface FiscalRecord {
+  id: string;
+  code: string;
+  name: string;
+  org: string;
+  region: string;
+  level: "central" | "local";
+  type: string;
+  sector: string;
+  field: string | null;
+  kind: string | null;
+  account: string | null;
+  unit: string | null;
+  program: string | null;
+  budget: number;
+  executed: number;
+  committed: number;
+  asof: string | null;
+  fund: Record<string, number>;
+  onthong: {
+    present: boolean;
+    link: { id: string; name: string } | null;
+    linkType: string | null;
+    note: string | null;
+    score: number | null;
+    cands: { id: string; name: string; inst: string | null; score: number }[];
+  };
+  series: number[];
+}
+
+export interface FiscalShard {
+  days: string[];
+  items: Record<string, FiscalRecord>;
+}
+
+/** What the list tables read — the page hands over only these fields (the full record stays on the policy page). */
+export type ListProgram = Pick<Program, "id" | "name" | "summary" | "section" | "region" | "type" | "agency" | "operator" | "target" | "when" | "budget">;
+
+/** Trim a policy to the list fields; long text is clipped because the list shows one line of it. */
+export function toListProgram(p: Program): ListProgram {
+  const clip = (t: string, n: number) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
+  return {
+    id: p.id, name: p.name, summary: clip(p.summary ?? "", 140), section: p.section, region: p.region, type: p.type,
+    agency: p.agency, operator: p.operator, target: clip(p.target ?? "", 90), when: p.when, budget: p.budget,
+  };
+}

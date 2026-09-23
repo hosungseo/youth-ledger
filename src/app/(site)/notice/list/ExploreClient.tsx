@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useDeferredValue, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Meta, Program } from "@/lib/types";
+import type { Meta, ListProgram } from "@/lib/types";
 import { TYPE_STYLES, typeStyle, formatBudget } from "@/lib/design";
 import ProgramTable, { type Sort } from "@/components/ProgramTable";
 
@@ -14,7 +14,7 @@ const REGION_ORDER = [
 ];
 
 /** Cheap Korean-friendly match: name, summary, agency, target. */
-function matches(p: Program, q: string) {
+function matches(p: ListProgram, q: string) {
   if (!q) return true;
   const hay = `${p.name} ${p.summary} ${p.agency} ${p.operator} ${p.target} ${p.region}`;
   return hay.toLowerCase().includes(q);
@@ -24,12 +24,12 @@ export default function ExploreClient({
   programs,
   meta,
 }: {
-  programs: Program[];
+  programs: ListProgram[];
   meta: Meta;
 }) {
   const params = useSearchParams();
 
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(params.get("q") ?? "");
   const [region, setRegion] = useState<string | null>(params.get("region"));
   const [type, setType] = useState<string | null>(params.get("type"));
   const [section, setSection] = useState<string | null>(params.get("section"));
@@ -65,7 +65,7 @@ export default function ExploreClient({
   }, [region, type, section, month, alwaysOnly, agency]);
 
   const facets = useMemo(() => {
-    const pass = (p: Program, skip: "region" | "type" | "section" | "when") =>
+    const pass = (p: ListProgram, skip: "region" | "type" | "section" | "when") =>
       matches(p, dq) &&
       (!agency || p.agency === agency) &&
       (skip === "region" || !region || p.region === region) &&
@@ -74,7 +74,7 @@ export default function ExploreClient({
       (skip === "when" ||
         ((!month || p.when.months.includes(month)) && (!alwaysOnly || p.when.always)));
 
-    const count = <T,>(skip: Parameters<typeof pass>[1], key: (p: Program) => T) => {
+    const count = <T,>(skip: Parameters<typeof pass>[1], key: (p: ListProgram) => T) => {
       const m = new Map<T, number>();
       for (const p of programs) if (pass(p, skip)) m.set(key(p), (m.get(key(p)) ?? 0) + 1);
       return m;

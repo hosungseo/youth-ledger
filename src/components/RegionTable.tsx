@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { Program } from "@/lib/types";
+import type { ListProgram } from "@/lib/types";
 import ProgramTable, { type Sort } from "./ProgramTable";
 
 /** The region page's list: same table as 목록, sortable in place. */
-export default function RegionTable({ programs }: { programs: Program[] }) {
+export default function RegionTable({ programs }: { programs: ListProgram[] }) {
   const [sort, setSort] = useState<Sort>("budget");
 
   const sorted = [...programs].sort((a, b) => {

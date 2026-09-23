@@ -25,7 +25,7 @@ export interface Gov24Item {
   id: string; n: string; inst: string; f: string; k: string; r: string; a0: number; a1: number;
   inc: number[]; tr: string[]; trNone: boolean; hh: string[]; hhNone: boolean; y: boolean; sum?: string; tg?: string;
 }
-export interface BudgetItem { n: string; r: string | null; org: string; b: number; ep: number }
+export interface BudgetItem { id: string; s: string; n: string; r: string | null; org: string; b: number; ep: number }
 export interface Place { code: string; sido: string; name: string }
 
 export interface FindData {
@@ -37,6 +37,15 @@ export interface FindData {
   traits: Record<string, string[]>;
   emp: Record<string, string[]>;
 }
+
+/** 온통청년 fields that fit each status — used only to order results, never to exclude. */
+const STATUS_TYPES: Record<string, string[]> = {
+  미취업: ["취업·일경험", "교육·역량"],
+  재직: ["금융·생활안정", "주거", "교육·역량"],
+  창업: ["창업·농어업", "금융·생활안정"],
+  대학생: ["교육·역량", "취업·일경험"],
+  농어업: ["창업·농어업"],
+};
 
 export type Verdict = { ok: true; check: string[] } | { ok: false };
 
@@ -109,10 +118,13 @@ export function findFor(d: FindData, p: Person): Result {
     const v = judgeGov24(g, p, d.traits);
     if (v.ok) gov24.push({ item: g, check: v.check });
   }
-  // clear matches first, then local before nationwide
-  const localFirst = (r: string[] | string) => ((Array.isArray(r) ? r.includes("ALL") : r === "ALL") ? 1 : 0);
-  onthong.sort((a, b) => a.check.length - b.check.length || localFirst(a.item.r) - localFirst(b.item.r));
-  gov24.sort((a, b) => a.check.length - b.check.length || localFirst(a.item.r) - localFirst(b.item.r));
+  // relevance: the person's own area first, then fields that fit their status, then clear matches before "확인 필요"
+  const nationwide = (r: string[] | string) => (Array.isArray(r) ? r.includes("ALL") : r === "ALL");
+  const fits = STATUS_TYPES[p.status] ?? [];
+  const score = (r: string[] | string, type: string, checks: number) =>
+    (nationwide(r) ? 0 : 4) + (fits.includes(type) ? 2 : 0) - Math.min(checks, 2);
+  onthong.sort((a, b) => score(b.item.r, b.item.t, b.check.length) - score(a.item.r, a.item.t, a.check.length));
+  gov24.sort((a, b) => score(b.item.r, "", b.check.length) - score(a.item.r, "", a.check.length));
   const gIds = new Set(gov24.map((x) => x.item.id));
   const both = new Set(onthong.filter((x) => x.item.g && gIds.has(x.item.g)).map((x) => x.item.id));
   const budget = d.budgetOnly.filter((b) => b.r && inRegion(b.r, p)).sort((a, b) => b.b - a.b);

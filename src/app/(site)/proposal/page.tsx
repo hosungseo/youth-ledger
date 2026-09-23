@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 const pct = (a: number, b: number) => `${Math.round((a / b) * 100)}%`;
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? "/youth-ledger";
 
 export default function ProposalPage() {
   const q = quality;
@@ -167,6 +168,12 @@ export default function ProposalPage() {
           <li>· 교육부·한국장학재단 — 국가장학금(기본계획 과제)의 온통청년 등록</li>
           <li>· 중앙부처·지방자치단체 — 1단계 대조 결과 확인, 시범 참여</li>
         </ul>
+        <p className="mt-4 text-[13px] text-ink-2">
+          1단계 확인 목록(자동 대조 결과) ·{" "}
+          <a href={`${BASE}/data/csv/policies.csv`} download className="font-semibold underline underline-offset-2 hover:text-ink">정책별 연결표</a> ·{" "}
+          <a href={`${BASE}/data/csv/budget.csv`} download className="font-semibold underline underline-offset-2 hover:text-ink">세부사업 대조표</a> ·{" "}
+          <a href={`${BASE}/data/csv/gov24.csv`} download className="font-semibold underline underline-offset-2 hover:text-ink">보조금24 미연결 서비스</a>
+        </p>
         <p className="mt-3 text-[11.5px] text-ink-3">비공식 개념검증(PoC)의 구상이며 기관의 공식 입장이 아닙니다.</p>
       </section>
     </div>

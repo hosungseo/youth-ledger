@@ -311,7 +311,7 @@ export default function FindClient() {
           more={shown.b < result.budget.length ? () => setShown({ ...shown, b: shown.b + 10 }) : undefined}
         >
           {result.budget.slice(0, shown.b).map((b, i) => (
-            <Item key={`${b.n}-${i}`} title={b.n} meta={`${b.org} · 예산현액 ${b.b.toLocaleString("ko-KR")}억 원`} />
+            <Item key={`${b.n}-${i}`} title={b.n} meta={`${b.org} · 예산현액 ${b.b.toLocaleString("ko-KR")}억 원`} href={`/fiscal/program/?id=${b.id}&r=${b.s}`} />
           ))}
           {result.budget.length === 0 && <p className="py-3 text-[12.5px] text-ink-3">해당 없음</p>}
         </Column>

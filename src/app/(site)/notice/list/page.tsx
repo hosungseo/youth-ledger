@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { fiscal, meta, programs } from "@/lib/data";
+import { toListProgram } from "@/lib/types";
 import ExploreClient from "./ExploreClient";
 import ListHeader from "@/components/ListHeader";
 
@@ -18,7 +19,7 @@ export default function NoticeListPage() {
         other={{ label: "재정 기준", total: fiscal.meta.total }}
       />
       <Suspense fallback={<div className="py-20" />}>
-        <ExploreClient programs={programs} meta={meta} />
+        <ExploreClient programs={programs.map(toListProgram)} meta={meta} />
       </Suspense>
     </div>
   );

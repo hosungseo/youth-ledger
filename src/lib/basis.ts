@@ -15,6 +15,8 @@ export interface BasisDef {
   key: Basis;
   /** 헤더 토글에 서는 짧은 이름. */
   label: string;
+  /** 좁은 화면에서 토글이 두 줄로 꺾이지 않게 쓰는 더 짧은 이름. */
+  short: string;
   /** 이 장부가 무엇을 세는지 — 토글 밑 한 줄. */
   gloss: string;
   home: string;
@@ -25,6 +27,7 @@ export const BASES: Record<Basis, BasisDef> = {
   notice: {
     key: "notice",
     label: "온통청년 기준",
+    short: "온통청년",
     gloss: "기관이 등록한 청년정책",
     home: "/notice/plate",
     pages: [
@@ -36,6 +39,7 @@ export const BASES: Record<Basis, BasisDef> = {
   fiscal: {
     key: "fiscal",
     label: "재정 기준",
+    short: "재정",
     gloss: "예산서에 잡힌 청년 세부사업",
     home: "/fiscal/plate",
     pages: [

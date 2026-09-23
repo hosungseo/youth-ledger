@@ -5,19 +5,21 @@ import { SITE_URL } from "@/lib/site";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "청년대장 — 2026 중앙·지방 청년정책",
+    default: "청년대장 — 범정부 청년정책 인벤토리 시제품",
     template: "%s · 청년대장",
   },
   description:
-    "온통청년 청년정책 2,914건과 예산서의 청년 세부사업 6,021건을 지역·분야·시기로 한자리에서 견주어 봅니다.",
+    "온통청년 청년정책, 보조금24 서비스, 예산서의 청년 세부사업을 번호로 이어 본 범정부 청년정책 목록의 시제품입니다.",
   openGraph: {
-    title: "청년대장 — 2026 중앙·지방 청년정책",
-    description: "온통청년 2,914건 × 예산서 6,021건, 온통청년에 없는 청년사업까지.",
+    title: "청년대장 — 청년정책을 한 목록으로",
+    description: "온통청년 · 보조금24 · 예산서를 번호로 이어 본 범정부 청년정책 인벤토리 시제품.",
     type: "website",
     locale: "ko_KR",
+    images: [{ url: `${SITE_URL}/og.png`, width: 1200, height: 630, alt: "청년대장 — 청년정책을 한 목록으로" }],
   },
   twitter: {
     card: "summary_large_image",
+    images: [`${SITE_URL}/og.png`],
   },
 };
 

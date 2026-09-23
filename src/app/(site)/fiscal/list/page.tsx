@@ -19,7 +19,7 @@ export default function FiscalListPage() {
       />
       {/* filters come from the URL on the client — the page is a static export */}
       <Suspense fallback={<div className="py-20" />}>
-        <FiscalExplore programs={fiscalPrograms} meta={fiscal.meta} />
+        <FiscalExplore programs={fiscalPrograms.map(({ source: _s, match: _m, ...rest }) => rest)} meta={fiscal.meta} />
       </Suspense>
     </div>
   );

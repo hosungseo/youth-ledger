@@ -1,277 +1,239 @@
 import Link from "next/link";
-import { fiscal, fiscalPrograms, meta, programs } from "@/lib/data";
-import { REGION_SLUG, TYPE_STYLES, formatBudget } from "@/lib/design";
-import CompareTable, { type CompareRow } from "@/components/CompareTable";
+import { fiscal, fiscalPrograms, getRecord, link, meta, programs } from "@/lib/data";
+import { formatBudget, typeStyle } from "@/lib/design";
+import type { PolicyRecord, Program } from "@/lib/types";
+import SearchDialog from "@/components/SearchDialog";
 
 // 설명에 숫자를 손으로 적어 두면 자료가 바뀔 때마다 조용히 틀린다.
 // (1,519건으로 박혀 있던 것이 공개된 뒤에야 드러났다.)
 export const metadata = {
-  title: { absolute: "청년대장 — 2026 중앙·지방 청년정책" },
+  title: { absolute: "청년대장 — 범정부 청년정책 인벤토리 시제품" },
   description:
-    `청년정책은 온통청년에 ${meta.total.toLocaleString("ko-KR")}건, ` +
-    `예산 자료에 ${fiscal.meta.total.toLocaleString("ko-KR")}건이 잡힙니다. ` +
-    "두 장부를 견주고, 온통청년에 없는 청년사업을 찾습니다.",
+    `온통청년 청년정책 ${meta.total.toLocaleString("ko-KR")}건, 예산서의 청년 세부사업 ${fiscal.meta.total.toLocaleString("ko-KR")}건, ` +
+    "보조금24 서비스를 번호로 이어 본 범정부 청년정책 목록의 시제품입니다.",
 };
 
-/** 광주·전남은 통합되어 한 행정구역이다. */
-const GROUP: Record<string, string> = { 광주: "전남광주", 전남: "전남광주" };
-const groupOf = (r: string) => GROUP[r] ?? r;
+const n = (v: number) => v.toLocaleString("ko-KR");
+const pct = (a: number, b: number) => `${Math.round((a / b) * 100)}%`;
 
-const REGION_ORDER = [
-  "중앙", "서울", "부산", "대구", "인천", "전남광주", "대전", "울산", "세종",
-  "경기", "강원", "충북", "충남", "전북", "경북", "경남", "제주",
-];
+/** The policy that shows every link at once: 보조금24(높음) + a strict budget line + open, preferring one with other registrations. */
+type Linked = { p: Program; r: PolicyRecord };
+function pickExample(): Linked | undefined {
+  return programs
+    .map((p) => ({ p, r: getRecord(p.id) }))
+    .filter((x): x is Linked => !!x.r)
+    .filter(({ p, r }) => p.gov24?.conf === "높음" && r.budget.some((b) => b.strict) && (p.status === "상시" || p.status === "진행중"))
+    .sort((a, b) => b.r.same.length - a.r.same.length || (b.p.budget ?? 0) - (a.p.budget ?? 0))[0];
+}
 
 export default function Home() {
-  const sum = <T,>(xs: T[], f: (x: T) => number) => xs.reduce((s, x) => s + f(x), 0);
-
-  const regionRows: CompareRow[] = REGION_ORDER.map((key) => {
-    const n = programs.filter((p) => groupOf(p.region) === key);
-    const f = fiscalPrograms.filter((p) => groupOf(p.region) === key);
-    return {
-      key,
-      label: key === "중앙" ? "중앙부처" : key,
-      href: key === "전남광주" || key === "중앙" ? null : `/notice/region/${REGION_SLUG[key]}`,
-      noticeCount: n.length,
-      noticeBudget: sum(n, (p) => p.budget ?? 0),
-      fiscalCount: f.length,
-      fiscalBudget: sum(f, (p) => p.budget),
-      // 중앙은 공고가 공모사업, 재정이 그 위 예산·기금 줄이라 금액이 겹친다.
-      budgetComparable: false, // 온통청년에는 예산 항목이 없다
-    };
-  });
-
-  const typeRows: CompareRow[] = TYPE_STYLES.map((t) => {
-    const n = programs.filter((p) => p.type === t.key);
-    const f = fiscalPrograms.filter((p) => p.type === t.key);
-    return {
-      key: t.key,
-      label: t.label,
-      href: `/notice/list?type=${encodeURIComponent(t.key)}`,
-      color: t.fill,
-      noticeCount: n.length,
-      noticeBudget: sum(n, (p) => p.budget ?? 0),
-      fiscalCount: f.length,
-      fiscalBudget: sum(f, (p) => p.budget),
-      budgetComparable: false, // 유형별 합계에는 중앙이 섞여 있다
-    };
-  });
-
-  const localNotice = programs.filter((p) => p.section === "local");
-  const localFiscal = fiscalPrograms.filter((p) => p.level === "local");
-  const localFiscalBudget = sum(localFiscal, (p) => p.budget);
-  const localFiscalIn = localFiscal.filter((p) => p.inOnthong).length;
   const est = fiscal.meta.absentEstimate;
-
-  const widest = [...regionRows]
-    .filter((r) => r.key !== "중앙" && r.noticeCount > 0)
-    .sort((a, b) => b.fiscalCount / b.noticeCount - a.fiscalCount / a.noticeCount)[0];
-  const inverted = regionRows.filter(
-    (r) => r.noticeCount > 0 && r.fiscalCount < r.noticeCount,
-  );
+  const support = est?.byKind?.["대상자 지원"];
+  const g24 = link.gov24Absence;
+  const cp = link.coveragePolicy;
+  const ex = pickExample();
+  const localNotice = programs.filter((p) => p.section === "local").length;
+  const localFiscal = fiscalPrograms.filter((p) => p.level === "local");
 
   return (
     <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8">
-      <h1 className="max-w-[820px] text-[34px] leading-[1.18] font-bold tracking-[-0.035em] text-balance md:text-[46px]">
-        청년정책은 몇 개일까요.
+      <p className="text-[12.5px] font-semibold text-ink-3">범정부 청년정책 인벤토리 · 시제품</p>
+      <h1 className="mt-3 max-w-[820px] text-[36px] leading-[1.15] font-bold tracking-[-0.035em] text-balance md:text-[52px]">
+        청년정책을
         <br />
-        온통청년과 예산서의 답이 다릅니다.
+        한 목록으로.
       </h1>
-
-      <p className="mt-6 max-w-[660px] text-[15.5px] leading-[1.85] text-ink-2">
-        하나는 국무조정실이 운영하는 <b className="font-semibold text-ink">온통청년</b>, 중앙부처와
-        지자체가 직접 등록한 청년정책 목록입니다. 다른 하나는{" "}
-        <b className="font-semibold text-ink">예산 자료</b>, 지방재정365와 열린재정에 청년이라는
-        이름으로 잡혀 있는 세부사업입니다. 예산은 잡혀 있는데 온통청년에는 없는 사업이 적지 않고,
-        온통청년에는 예산·집행 항목이 아예 없습니다.{" "}
-        <b className="font-semibold text-ink">두 장부를 한 화면에서 잇는 것</b>이 이 대장의 목적입니다.
+      <p className="mt-6 max-w-[680px] text-[15.5px] leading-[1.85] text-ink-2">
+        청년정책은 지금 세 곳에 따로 있습니다. 정책 안내는 <b className="font-semibold text-ink">온통청년</b>, 자격과 신청은{" "}
+        <b className="font-semibold text-ink">보조금24</b>, 예산과 집행은 <b className="font-semibold text-ink">지방재정365·열린재정</b>.
+        서로 가리키는 번호가 없어 한 정책의 조건과 돈을 한 번에 볼 수 없습니다. 이 시제품은 공개 자료만으로 셋을 이어, 청년정책 전담조직이 쓸
+        범정부 목록이 어떤 모습일지 먼저 만들어 본 것입니다.
       </p>
 
-      {/*
-        갈림길. 문짝이 그 뒤 방의 색을 그대로 입고 있어서, 누르기 전에 어디로
-        들어가는지 보인다 — 공고는 흰 종이, 재정은 검은 판이다.
-      */}
-      <div className="mt-11 grid gap-4 md:grid-cols-2">
-        <Door
-          href="/notice/plate"
-          eyebrow="온통청년 기준"
-          count={meta.total}
-          unit="건 청년정책"
-          budget={`지금 신청 가능 ${(meta.open ?? 0).toLocaleString("ko-KR")}건 · 보조금24 연결 ${(meta.withGov24 ?? 0).toLocaleString("ko-KR")}건`}
-          budgetNote={`예산 항목이 없어, 예산서와 이어지는 ${(meta.withBudget ?? 0).toLocaleString("ko-KR")}건에만 금액을 붙였습니다`}
-          blurb="기관이 청년정책으로 등록한 것을 봅니다. 지원대상·신청기간·소관기관이 붙어 있고, 보조금24 서비스와 이어지는 정책은 바로 건너갈 수 있습니다."
-          bullets={["지역·분야·신청시기로 좁히기", "정책마다 상세 페이지(보조금24·예산 연결)", "다른 지역의 비슷한 정책과 나란히"]}
-          tone="paper"
-        />
-        <Door
-          href="/fiscal/plate"
-          eyebrow="재정 기준"
-          count={fiscal.meta.total}
-          unit="건 청년 세부사업"
-          budget={`예산현액 ${formatBudget(fiscal.meta.budgetTotal)}원`}
-          budgetNote={`온통청년에 대응 정책이 있는 것 ${(fiscal.meta.inOnthong ?? 0).toLocaleString("ko-KR")}건(자동 판정)`}
-          blurb="예산서에 잡힌 청년사업을 그대로 봅니다. 온통청년에 등록되지 않은 사업까지 들어 있고, 온통청년에는 없는 집행률이 붙습니다."
-          bullets={["온통청년에 없는 사업 걸러 보기", "9월 21일 기준 집행률", "분야·지역·기관별로 갈라 보기"]}
-          tone="ink"
-        />
+      <div className="mt-8 max-w-[720px]">
+        <SearchDialog hero />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link href="/find" className="rounded-full bg-ink px-5 py-2.5 text-[14px] font-semibold text-onink transition-opacity hover:opacity-90">
+          내 조건으로 찾기 →
+        </Link>
+        <Link href="/notice/list" className="rounded-full border border-hair bg-card px-5 py-2.5 text-[14px] font-semibold text-ink-2 hover:bg-wash">
+          정책 목록
+        </Link>
+        <Link href="/fiscal/list" className="rounded-full border border-hair bg-card px-5 py-2.5 text-[14px] font-semibold text-ink-2 hover:bg-wash">
+          예산서 세부사업
+        </Link>
       </div>
 
-      <p className="mt-4 text-[12.5px] leading-[1.7] text-ink-3">
-        들어가면 바탕색이 바뀝니다. 흰 바탕이면 온통청년을, 검은 바탕이면 예산을 보고
-        있는 것입니다. 한 정책이 광역·시군 예산으로 나뉘어 여러 세부사업이 되기도 하므로
-        건수 차이가 곧 누락 수는 아닙니다. 실제로 온통청년에 없는 비율은 표본 검토로 따로 추정했습니다.
-      </p>
-
-      <Link
-        href="/link"
-        className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-hair bg-card p-6 transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.09)]"
-      >
-        <span>
-          <span className="block text-[12px] font-semibold text-ink-3">종합 · 다섯 장부를 한 장에</span>
-          <span className="mt-1 block text-[18px] font-bold tracking-[-0.02em]">
-            청년 1인당 예산 지도, 온통청년 등록의 광역 격차, 재원 구성, 청년 나이 정의
-          </span>
-          <span className="mt-1 block text-[13px] text-ink-2">
-            온통청년 · 보조금24 · 지방재정365 · 열린재정 · KOSIS 인구를 시·군·구 단위로 묶었습니다.
-          </span>
-        </span>
-        <span className="text-[14px] font-semibold" aria-hidden>
-          종합 보기 <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
-        </span>
-      </Link>
-
-      {/* Local governments: same layer on both sides (individual programs). */}
-      <section className="mt-14 rounded-[20px] border border-hair bg-card p-7 md:p-9">
-        <h2 className="text-[13px] font-semibold text-ink-3">지방자치단체만 견주면</h2>
-        <p className="mt-3 max-w-[660px] text-[15px] leading-[1.8]">
-          온통청년에 지자체가 등록한 청년정책은 <b className="font-semibold">{localNotice.length.toLocaleString("ko-KR")}건</b>,
-          지자체 예산서에 청년 이름으로 잡힌 세부사업은{" "}
-          <b className="font-semibold">{localFiscal.length.toLocaleString("ko-KR")}건</b>{" "}
-          <b className="font-semibold">{formatBudget(localFiscalBudget)}원</b>입니다.
-          {est && (
-            <>
-              {" "}표본 {est.sample}건을 검토해 보니, 청년 세부사업의{" "}
-              <b className="font-semibold text-ink">약 {est.absentShare}%</b>(95% 구간 {est.ci[0]}~{est.ci[1]}%)는
-              온통청년에 대응하는 정책이 없었습니다.
-            </>
-          )}
-        </p>
-
-        <div className="mt-7 grid gap-6 sm:grid-cols-2">
-          <div>
-            <p className="text-[12px] font-semibold text-ink-3">사업 수</p>
-            <div className="mt-2.5 space-y-2">
-              {[
-                { name: "온통청년", v: localNotice.length, bg: "bg-ink" },
-                { name: "예산 자료", v: localFiscal.length, bg: "bg-t-biz" },
-              ].map((bar) => (
-                <div key={bar.name} className="flex items-center gap-3">
-                  <span className="w-[4.5rem] shrink-0 text-[12px] text-ink-2">{bar.name}</span>
-                  <span className="relative h-6 flex-1 bg-wash">
-                    <span
-                      className={`absolute inset-y-0 left-0 ${bar.bg}`}
-                      style={{ width: `${(bar.v / Math.max(localNotice.length, localFiscal.length)) * 100}%` }}
-                    />
-                  </span>
-                  <span className="tnum w-[6.5rem] shrink-0 text-right text-[13px] font-bold">
-                    {bar.v.toLocaleString("ko-KR")}건
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-ink-3">예산 자료의 청년 세부사업</p>
-            <div className="mt-2.5 space-y-2">
-              {[
-                { name: "온통청년 있음", v: localFiscalIn, bg: "bg-ink" },
-                { name: "온통청년 없음", v: localFiscal.length - localFiscalIn, bg: "bg-t-biz" },
-              ].map((bar) => (
-                <div key={bar.name} className="flex items-center gap-3">
-                  <span className="w-[5.5rem] shrink-0 text-[12px] text-ink-2">{bar.name}</span>
-                  <span className="relative h-6 flex-1 bg-wash">
-                    <span
-                      className={`absolute inset-y-0 left-0 ${bar.bg}`}
-                      style={{ width: `${(bar.v / localFiscal.length) * 100}%` }}
-                    />
-                  </span>
-                  <span className="tnum w-[6.5rem] shrink-0 text-right text-[13px] font-bold">
-                    {bar.v.toLocaleString("ko-KR")}건
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-2 text-[11.5px] text-ink-3">
-              자동 판정 · 표본 검토 기준 ‘없음’ 판정의 약 {fiscal.meta.accuracy?.absence}%, ‘있음’ 판정의 약 {fiscal.meta.accuracy?.presence}%가 맞음
-            </p>
-          </div>
-        </div>
+      {/* what the linking shows, in four numbers */}
+      <section className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="주요 수치">
+        <Stat href="/notice/list" value={`${n(meta.total)}건`} label="온통청년 청년정책" note={`지금 신청 가능 ${n(meta.open ?? 0)}건 · 중앙 ${n(meta.central)} · 지자체 ${n(meta.local)}`} />
+        <Stat
+          href="/fiscal/list"
+          value={`${n(fiscal.meta.total)}개`}
+          label="예산서의 청년 세부사업"
+          note={`예산현액 ${formatBudget(fiscal.meta.budgetTotal)}원 · 이름에 ‘청년’ 등이 들어간 사업`}
+        />
+        <Stat
+          href="/fiscal/list?onthong=absent"
+          value={support ? `약 ${Math.round(support.share)}%` : "—"}
+          label="온통청년에서 확인되지 않는 대상자 지원 사업"
+          note={support ? `지방 대상자 지원형 세부사업 기준 · 표본 추정(95% 구간 ${Math.round(support.ci[0])}~${Math.round(support.ci[1])}%)` : ""}
+        />
+        <Stat
+          href="/link"
+          value={pct(cp.both, cp.total)}
+          label="보조금24·예산 둘 다 이어지는 정책"
+          note={`${n(cp.both)}건뿐 · 공통 번호가 없어 이름으로 대조한 결과${g24 ? ` · 보조금24 청년 서비스 약 ${n(g24.absentYouthN)}건은 온통청년에 없음` : ""}`}
+        />
       </section>
 
-      {/* Why the central row cannot be added up. */}
-      <section className="mt-8 rounded-[20px] border border-dashed border-hair bg-paper p-7">
-        <h2 className="text-[13px] font-semibold text-ink-3">중앙은 건수로 견줄 수 없습니다</h2>
-        <p className="mt-3 max-w-[660px] text-[14.5px] leading-[1.85] text-ink-2">
-          중앙은 두 자료가 <b className="font-semibold text-ink">서로 다른 층위</b>를 봅니다.
-          온통청년은 정책 하나하나를(같은 사업이 연도·부서별로 여러 번 등록되기도 합니다), 열린재정은
-          그것들을 묶는 세부사업을 싣습니다({"'청년일자리창출지원'"} 9,251억 안에{" "}
-          {"'청년일자리도약장려금'"}). 그래서 중앙은 세부사업 한 건씩 온통청년과 대조했고,{" "}
-          <b className="font-semibold text-ink">맞춤형 국가장학금(5.1조 원)</b>처럼 청년이 주 대상인데
-          온통청년에 없는 사업을 재정 기준 목록에서 표시해 두었습니다.
-        </p>
-      </section>
-
-      <section className="mt-14">
-        <h2 className="text-[22px] font-bold tracking-[-0.025em]">지역별</h2>
-        <p className="mt-2 max-w-[640px] text-[13.5px] leading-[1.75] text-ink-2">
-          온통청년에 얼마나 등록됐는지는 지역마다 크게 다릅니다.
-          {widest && (
-            <>
-              {" "}가장 벌어진 곳은 <b className="font-semibold text-ink">{widest.label}</b>로,
-              온통청년 {widest.noticeCount}건인데 예산 자료에는{" "}
-              {widest.fiscalCount.toLocaleString("ko-KR")}건 —{" "}
-              {(widest.fiscalCount / widest.noticeCount).toFixed(0)}배입니다.
-            </>
-          )}
-        </p>
-        <div className="mt-6">
-          <CompareTable rows={regionRows} unit="지역" />
-        </div>
-
-        {inverted.length > 0 && (
-          <p className="mt-5 max-w-[660px] rounded-[16px] border border-hair bg-card p-5 text-[13px] leading-[1.8] text-ink-2">
-            <b className="font-semibold text-ink">배수가 1보다 작은 칸도 결함의 표시입니다.</b>{" "}
-            {inverted.map((r) => r.label).join(", ")}
-            {inverted.length === 1 ? "은" : "는"} 온통청년에 등록된 수가 예산 자료에 잡힌 것보다 많습니다.
-            같은 정책을 모집 차수·연도별로 따로 등록했거나, 예산서 사업명에 청년이 드러나지 않거나,
-            행사·공고 단위로 잘게 등록한 경우입니다.
+      {/* one policy, all the links — what the inventory would show for every policy */}
+      {ex && (
+        <section className="mt-14">
+          <h2 className="text-[22px] font-bold tracking-[-0.025em]">한 정책이 이어지면</h2>
+          <p className="mt-2 max-w-[700px] text-[14px] leading-[1.8] text-ink-2">
+            세 곳이 모두 이어지는 드문 정책 하나입니다. 인벤토리는 모든 정책을 이렇게 보여 주려는 것입니다 — 온통청년의 안내, 보조금24의 자격과 신청,
+            예산서의 돈이 한 줄로.
           </p>
-        )}
+          <ExampleChain ex={ex} />
+        </section>
+      )}
+
+      {/* what you can do here */}
+      <section className="mt-14">
+        <h2 className="text-[22px] font-bold tracking-[-0.025em]">여기서 할 수 있는 것</h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Task href="/find" title="내 조건으로 찾기" body="사는 곳·나이·소득·상태를 넣으면 온통청년·보조금24·예산서에서 해당하는 것을 한 번에 봅니다." cta="찾아보기" />
+          <Task href="/link" title="종합 지도" body="시·군·구별 청년 1인당 예산, 온통청년에 없는 사업의 비율, 청년 나이 상한을 지도로 봅니다." cta="지도 보기" />
+          <Task href="/quality" title="점검" body="온통청년 자료를 그대로 세어, 등록 시기·회차·항목에서 어떤 기준이 필요한지 봅니다." cta="점검 보기" />
+          <Task href="/proposal" title="제안" body="새 시스템 없이 시행계획·온통청년·보조금24·재정정보를 정책 ID 하나로 잇는 구상입니다." cta="제안 보기" />
+        </div>
       </section>
 
-      <section className="mt-16">
-        <h2 className="text-[22px] font-bold tracking-[-0.025em]">분야별</h2>
-        <p className="mt-2 max-w-[640px] text-[13.5px] leading-[1.75] text-ink-2">
-          온통청년 분야는 등록 분류를 옮긴 것이고, 재정 기준 분야는 사업명으로 추정한 값입니다.
-          이름에 단서가 없는 센터·공간·운영비는 정책기반으로 몰립니다. 분야별 배수는 그 점을 감안해서 보세요.
+      {/* the two ledgers, side by side */}
+      <section className="mt-14">
+        <h2 className="text-[22px] font-bold tracking-[-0.025em]">두 장부로 들어가기</h2>
+        <p className="mt-2 max-w-[700px] text-[14px] leading-[1.8] text-ink-2">
+          온통청년은 기관이 등록한 정책을, 재정 기준은 예산서에 잡힌 청년 세부사업을 셉니다. 들어가면 바탕색이 바뀝니다 — 흰 바탕은 온통청년, 검은 바탕은 예산입니다.
         </p>
-        <div className="mt-6">
-          <CompareTable rows={typeRows} unit="분야" />
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          <Door
+            href="/notice/plate"
+            eyebrow="온통청년 기준"
+            count={meta.total}
+            unit="건 청년정책"
+            sub={`지금 신청 가능 ${n(meta.open ?? 0)}건 · 보조금24 연결 ${n(meta.withGov24 ?? 0)}건`}
+            bullets={["지역·분야·신청시기로 좁히기", "정책마다 인벤토리 카드(번호·자격·예산)", "같은 사업의 다른 등록까지"]}
+            tone="paper"
+          />
+          <Door
+            href="/fiscal/plate"
+            eyebrow="재정 기준"
+            count={fiscal.meta.total}
+            unit="개 청년 세부사업"
+            sub={`예산현액 ${formatBudget(fiscal.meta.budgetTotal)}원 · 온통청년 대응 ${n(fiscal.meta.inOnthong ?? 0)}개(자동 판정)`}
+            bullets={["온통청년에 없는 사업 걸러 보기", "세부사업마다 2026년 집행 추이와 재원", "분야·지역·부문별로 갈라 보기"]}
+            tone="ink"
+          />
         </div>
+        <p className="mt-4 max-w-[760px] text-[12.5px] leading-[1.7] text-ink-3">
+          지자체만 견주면 온통청년에 등록된 정책은 {n(localNotice)}건, 예산서의 청년 세부사업은 {n(localFiscal.length)}개입니다. 한 정책이 광역·시군 예산으로 나뉘어
+          여러 세부사업이 되기도 해서 건수 차이가 곧 누락은 아닙니다
+          {est ? ` — 실제로 온통청년에 대응 정책이 없는 비율은 표본 검토로 약 ${Math.round(est.absentShare)}%(대상자 지원형 약 ${Math.round(support?.share ?? 0)}%)로 추정했습니다` : ""}.
+        </p>
       </section>
 
       <p className="mt-16 border-t border-hair pt-6 text-[12px] leading-[1.8] text-ink-3">
-        온통청년 기준 출처 · {meta.source}
-        <br />
-        재정 기준 출처 · {fiscal.meta.source}
-        <br />
-        재정 기준의 한계(분야 추정, 자동 판정의 정확도, 통합 광역 처리)는{" "}
+        출처 · {meta.source} · {fiscal.meta.source} · 보조금24(공공데이터포털) · KOSIS 주민등록인구. 비공식 개념검증이며 기관의 공식 입장이 아닙니다.
+        수치의 한계와 정확도는{" "}
         <Link href="/about" className="underline underline-offset-2 hover:text-ink">
-          자료 페이지
+          자료
         </Link>
         에 적어 두었습니다.
       </p>
     </div>
+  );
+}
+
+function ExampleChain({ ex }: { ex: Linked }) {
+  const { p, r } = ex;
+  const s = typeStyle(p.type);
+  const b = [...r.budget].sort((x, y) => Number(y.strict) - Number(x.strict) || y.budget - x.budget)[0];
+  const rate = b && b.budget > 0 ? Math.round((b.executed / b.budget) * 100) : 0;
+  const g = r.gov24;
+  const age = (a: [number | null, number | null]) => (a[0] == null && a[1] == null ? "제한 없음" : `${a[0] ?? ""}~${a[1] ?? ""}세`);
+  const cells = [
+    {
+      tag: "온통청년 · 안내",
+      title: p.name,
+      lines: [`${p.agency} · ${p.status}`, r.plan.cycle ? `기본계획 과제 ${r.plan.cycle}차 ${r.plan.way}-${r.plan.focus}-${r.plan.task}` : "", r.same.length ? `같은 사업의 다른 등록 ${r.same.length}건` : ""],
+    },
+    {
+      tag: "보조금24 · 자격과 신청",
+      title: p.gov24?.name ?? "",
+      lines: [`서비스ID ${p.gov24?.id}`, g ? `나이 ${age(g.age)} · 소득 ${g.income}` : "", g?.kind ? `지원유형 ${g.kind}` : ""],
+    },
+    {
+      tag: "예산서 · 돈",
+      title: b?.name ?? "",
+      lines: [b ? `${b.org} · 예산현액 ${formatBudget(b.budget)}원` : "", b ? `집행 ${formatBudget(b.executed)}원 (${rate}%)` : ""],
+    },
+  ];
+  return (
+    <Link href={`/notice/program/${p.id}`} className="group mt-5 block rounded-[20px] border border-hair bg-card p-5 transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.08)] md:p-6">
+      <ol className="grid gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-stretch">
+        {cells.map((c, i) => (
+          <li key={c.tag} className="contents">
+            {i > 0 && (
+              <span className="hidden self-center text-[20px] text-ink-3 md:block" aria-hidden>
+                ↔
+              </span>
+            )}
+            <div className="min-w-0 rounded-[14px] bg-wash-0 p-4">
+              <p className="text-[11.5px] font-semibold" style={{ color: i === 0 ? s.fg : undefined }}>
+                <span className={i === 0 ? "" : "text-ink-3"}>{c.tag}</span>
+              </p>
+              <p className="mt-1.5 text-[15px] leading-snug font-bold">{c.title}</p>
+              <ul className="mt-2 space-y-0.5 text-[12px] text-ink-2">
+                {c.lines.filter(Boolean).map((l) => (
+                  <li key={l} className="tnum">
+                    {l}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-4 text-[13px] font-semibold">
+        이 정책의 인벤토리 카드 보기 <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+      </p>
+    </Link>
+  );
+}
+
+function Stat({ href, value, label, note }: { href: string; value: string; label: string; note: string }) {
+  return (
+    <Link href={href} className="group rounded-[16px] border border-hair bg-card p-5 transition-shadow hover:shadow-[0_6px_22px_rgba(0,0,0,0.07)]">
+      <p className="tnum text-[30px] leading-none font-bold tracking-[-0.03em]">{value}</p>
+      <p className="mt-2 text-[13px] font-semibold group-hover:underline">{label}</p>
+      <p className="mt-1 text-[11.5px] leading-[1.55] text-ink-3">{note}</p>
+    </Link>
+  );
+}
+
+function Task({ href, title, body, cta }: { href: string; title: string; body: string; cta: string }) {
+  return (
+    <Link href={href} className="group flex flex-col justify-between rounded-[18px] border border-hair bg-card p-5 transition-shadow hover:shadow-[0_6px_22px_rgba(0,0,0,0.07)]">
+      <span>
+        <span className="block text-[16px] font-bold tracking-[-0.02em]">{title}</span>
+        <span className="mt-2 block text-[13px] leading-[1.7] text-ink-2">{body}</span>
+      </span>
+      <span className="mt-5 text-[13px] font-semibold">
+        {cta} <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+      </span>
+    </Link>
   );
 }
 
@@ -280,9 +242,7 @@ function Door({
   eyebrow,
   count,
   unit,
-  budget,
-  budgetNote,
-  blurb,
+  sub,
   bullets,
   tone,
 }: {
@@ -290,9 +250,7 @@ function Door({
   eyebrow: string;
   count: number;
   unit: string;
-  budget: string;
-  budgetNote?: string;
-  blurb: string;
+  sub: string;
   bullets: string[];
   tone: "paper" | "ink";
 }) {
@@ -306,48 +264,22 @@ function Door({
       }`}
     >
       <div>
-        <span className={`text-[12px] font-semibold ${ink ? "text-white/55" : "text-ink-3"}`}>
-          {eyebrow}
-        </span>
+        <span className={`text-[12px] font-semibold ${ink ? "text-white/55" : "text-ink-3"}`}>{eyebrow}</span>
         <p className="tnum mt-3 text-[40px] leading-none font-bold tracking-[-0.03em]">
           {count.toLocaleString("ko-KR")}
-          <span
-            className={`ml-1.5 text-[15px] font-semibold ${ink ? "text-white/70" : "text-ink-2"}`}
-          >
-            {unit}
-          </span>
+          <span className={`ml-1.5 text-[15px] font-semibold ${ink ? "text-white/70" : "text-ink-2"}`}>{unit}</span>
         </p>
-        <p className={`tnum mt-2 text-[13px] ${ink ? "text-white/60" : "text-ink-3"}`}>{budget}</p>
-        {budgetNote && (
-          <p
-            className={`mt-1 text-[11.5px] leading-[1.55] ${ink ? "text-white/45" : "text-ink-3/80"}`}
-          >
-            {budgetNote}
-          </p>
-        )}
-
-        <p className={`mt-5 text-[14px] leading-[1.75] ${ink ? "text-white/85" : "text-ink-2"}`}>
-          {blurb}
-        </p>
-
-        <ul className="mt-4 space-y-1.5">
+        <p className={`tnum mt-2 text-[13px] ${ink ? "text-white/60" : "text-ink-3"}`}>{sub}</p>
+        <ul className="mt-5 space-y-1.5">
           {bullets.map((b) => (
-            <li key={b} className={`flex gap-2.5 text-[12.5px] ${ink ? "text-white/70" : "text-ink-3"}`}>
-              <span
-                className={`mt-[7px] h-1 w-1 shrink-0 rounded-full ${ink ? "bg-t-biz" : "bg-ink"}`}
-                aria-hidden
-              />
+            <li key={b} className={`flex gap-2.5 text-[12.5px] ${ink ? "text-white/75" : "text-ink-2"}`}>
+              <span className={`mt-[7px] h-1 w-1 shrink-0 rounded-full ${ink ? "bg-t-biz" : "bg-ink"}`} aria-hidden />
               {b}
             </li>
           ))}
         </ul>
       </div>
-
-      <span
-        className={`mt-8 inline-flex items-center gap-2 text-[14px] font-semibold ${
-          ink ? "text-t-biz" : "text-ink"
-        }`}
-      >
+      <span className={`mt-8 inline-flex items-center gap-2 text-[14px] font-semibold ${ink ? "text-t-biz" : "text-ink"}`}>
         이 기준으로 들어가기
         <span className="transition-transform group-hover:translate-x-1" aria-hidden>
           →

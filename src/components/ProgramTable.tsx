@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Program } from "@/lib/types";
+import type { ListProgram } from "@/lib/types";
 import { formatBudget, formatWhen, typeStyle } from "@/lib/design";
 
 export type Sort = "budget" | "name" | "region";
@@ -19,7 +19,7 @@ export default function ProgramTable({
   sort,
   onSort,
 }: {
-  programs: Program[];
+  programs: ListProgram[];
   sort: Sort;
   onSort: (s: Sort) => void;
 }) {
