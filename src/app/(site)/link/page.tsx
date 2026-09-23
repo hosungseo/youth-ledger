@@ -67,6 +67,15 @@ export default function LinkPage() {
   const cov = ra.reduce((s, a, i) => s + (a - mean) * (rb[i] - mean), 0);
   const varr = ra.reduce((s, a) => s + (a - mean) ** 2, 0);
   const rho = cov / varr;
+  // share of the 시군구 variance that the 광역 alone explains (η²)
+  const shares = eligible.map((u) => u.absent / u.programs);
+  const grand = shares.reduce((a, b) => a + b, 0) / shares.length;
+  const ssTotal = shares.reduce((a, v) => a + (v - grand) ** 2, 0);
+  const ssBetween = stripRows.reduce((a, r) => {
+    const m = r.points.reduce((x, p) => x + p.value, 0) / r.points.length;
+    return a + r.points.length * (m - grand) ** 2;
+  }, 0);
+  const eta2 = ssTotal ? ssBetween / ssTotal : 0;
   const ageMax = Math.max(...Object.values(L.ageAll));
 
   const coverSeries: Series[] = [
@@ -123,7 +132,7 @@ export default function LinkPage() {
       <section className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi value={man(perYouthNational)} label="청년 1인당 지방 청년 예산" note="지자체 청년 세부사업 ÷ 20~39세" />
         <Kpi value={est ? `약 ${est.absentShare}%` : "—"} label="온통청년에 없는 지방 청년사업" note={est ? `표본 추정 · 95% 구간 ${est.ci[0]}~${est.ci[1]}%` : ""} />
-        <Kpi value={`${Math.round((cp.none / cp.total) * 100)}%`} label="어디와도 연결 안 된 온통청년 정책" note={`${cp.none.toLocaleString("ko-KR")}건 — 예산도, 보조금24 서비스도 없음`} />
+        <Kpi value={`${Math.round((cp.none / cp.total) * 100)}%`} label="자동으로 예산·보조금24에 이어지지 않는 정책" note={`${cp.none.toLocaleString("ko-KR")}건 — 공통 번호가 없어 이름으로도 짝을 못 찾은 것`} />
         <Kpi value={`${ageOrder.filter((k) => L.ageAll[k]).length}가지`} label="‘청년’ 나이 상한" note="29·34·39·45·49세, 제한 없음 …" />
       </section>
 
@@ -131,9 +140,10 @@ export default function LinkPage() {
       <section className="mt-16">
         <h2 className="text-[22px] font-bold tracking-[-0.025em]">온통청년 정책은 어디와 이어지나</h2>
         <p className="mt-2 max-w-[680px] text-[14px] leading-[1.8] text-ink-2">
-          정책 {cp.total.toLocaleString("ko-KR")}건 가운데 보조금24 서비스와도, 예산서 세부사업과도 이어지지 않는 것이{" "}
-          <b className="font-semibold text-ink">{cp.none.toLocaleString("ko-KR")}건</b>입니다. 이 정책들은 누가 받을 수 있는지(자격 판정)도,
-          얼마를 쓰는지(예산)도 온통청년 밖에서 확인할 길이 없습니다.
+          정책 {cp.total.toLocaleString("ko-KR")}건 가운데 보조금24 서비스와도, 예산서 세부사업과도 자동으로 이어지지 않는 것이{" "}
+          <b className="font-semibold text-ink">{cp.none.toLocaleString("ko-KR")}건</b>입니다. 실제로 서비스·예산이 없다는 뜻이 아니라,
+          세 장부에 공통 번호가 없어 이름과 지역으로만 짝을 찾을 수 있고 그 방법으로는 찾지 못했다는 뜻입니다. 등록할 때 보조금24
+          서비스ID와 예산 코드를 함께 받으면 이 막대는 한 번에 채워집니다.
         </p>
         <div className="mt-6 rounded-[20px] border border-hair bg-card p-6">
           <StackedBars
@@ -145,7 +155,7 @@ export default function LinkPage() {
 
         <h3 className="mt-10 text-[15px] font-bold tracking-[-0.02em]">거꾸로, 예산서의 청년 세부사업은 온통청년에 있나</h3>
         <p className="mt-1.5 max-w-[680px] text-[12.5px] leading-[1.7] text-ink-3">
-          지방 청년 세부사업을 성격별로 나눴습니다. 청년이 직접 신청하는 ‘대상자 지원형’도 상당수가 온통청년에 없습니다(자동 판정, 약 72% 정확).
+          지방 청년 세부사업을 성격별로 나눴습니다. 청년이 직접 신청하는 ‘대상자 지원형’도 상당수가 온통청년에 없습니다(자동 판정, ‘없음’ 판정의 약 {local.accuracy?.absence}%가 맞음).
         </p>
         <div className="mt-4 rounded-[20px] border border-hair bg-card p-6">
           <StackedBars
@@ -184,13 +194,16 @@ export default function LinkPage() {
 
       {/* registration depends on the 광역, not on money */}
       <section className="mt-16">
-        <h2 className="text-[22px] font-bold tracking-[-0.025em]">온통청년 등록은 예산이 아니라 광역에 따라 갈립니다</h2>
+        <h2 className="text-[22px] font-bold tracking-[-0.025em]">온통청년 등록 여부는 광역에 따라 크게 갈립니다</h2>
         <p className="mt-2 max-w-[700px] text-[14px] leading-[1.8] text-ink-2">
-          청년 세부사업이 5건 넘는 시·군·구 {eligible.length}곳에서, 청년 1인당 예산과 ‘온통청년에 없는 비율’의 순위상관은{" "}
-          <b className="font-semibold text-ink">{rho.toFixed(2)}</b>로 사실상 관계가 없습니다. 대신 광역마다 뚜렷하게 갈립니다 —{" "}
-          {stripRows[0].label}은 중앙값 {Math.round(stripRows[0].median * 100)}%, {stripRows[stripRows.length - 1].label}은{" "}
-          {Math.round(stripRows[stripRows.length - 1].median * 100)}%입니다. 시·군·구 사업을 온통청년에 올리는 방식(광역이 모아 등록하는지,
-          시·군·구가 직접 하는지)이 결과를 좌우한다는 뜻이고, 그래서 등록 책임을 정하는 것이 인벤토리의 첫 과제입니다.
+          청년 세부사업이 5건 넘는 시·군·구 {eligible.length}곳의 ‘온통청년에 없는 비율’은 어느 광역에 속하느냐가 차이의{" "}
+          <b className="font-semibold text-ink">약 {Math.round(eta2 * 100)}%</b>를 설명합니다 — {stripRows[0].label}은 중앙값{" "}
+          {Math.round(stripRows[0].median * 100)}%, {stripRows[stripRows.length - 1].label}은{" "}
+          {Math.round(stripRows[stripRows.length - 1].median * 100)}%입니다. 청년 1인당 예산과의 순위상관은{" "}
+          <b className="font-semibold text-ink">{rho.toFixed(2)}</b>로{" "}
+          {Math.abs(rho) < 0.1 ? "사실상 관계가 없습니다" : Math.abs(rho) < 0.3 ? "약합니다" : "뚜렷합니다"}. 예산 규모보다 시·군·구 사업을
+          온통청년에 올리는 방식(광역이 모아 등록하는지, 시·군·구가 직접 하는지)이 결과를 좌우한다는 뜻이고, 그래서 등록 책임을 정하는
+          것이 인벤토리의 첫 과제입니다. 시·군·구별 값은 자동 판정이라 개별 점은 흔들릴 수 있습니다.
         </p>
         <div className="mt-6 rounded-[20px] border border-hair bg-card p-6">
           <StripChart rows={stripRows} color={C2} />

@@ -79,6 +79,24 @@ export default function SiteNav() {
               종합
             </Link>
             <Link
+              href="/quality"
+              aria-current={pathname === "/quality" ? "page" : undefined}
+              className={`text-[13px] transition-colors ${
+                pathname === "/quality" ? "font-semibold text-ink" : "text-ink-2 hover:text-ink"
+              }`}
+            >
+              점검
+            </Link>
+            <Link
+              href="/proposal"
+              aria-current={pathname === "/proposal" ? "page" : undefined}
+              className={`text-[13px] transition-colors ${
+                pathname === "/proposal" ? "font-semibold text-ink" : "text-ink-2 hover:text-ink"
+              }`}
+            >
+              제안
+            </Link>
+            <Link
               href="/about"
               aria-current={pathname === "/about" ? "page" : undefined}
               className={`text-[13px] transition-colors ${
@@ -160,6 +178,12 @@ export default function SiteNav() {
               </Link>
               <Link href="/link" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 종합
+              </Link>
+              <Link href="/quality" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+                점검
+              </Link>
+              <Link href="/proposal" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+                제안
               </Link>
               <Link href="/about" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 자료

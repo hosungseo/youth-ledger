@@ -84,8 +84,9 @@ export default function AboutPage() {
               연결이었습니다(‘중간’에는 시·군 사업을 광역·중앙 상위 서비스에 잇는 경우가 많습니다).
             </Li>
             <Li>
-              <b className="font-semibold text-ink">예산서 ↔ 온통청년(지방)</b> — 표본 145건. ‘온통청년에 있음/없음’ 자동 판정은 각각 약
-              73%·72%가 맞았고, 정책별 예산 연결(엄격 기준)은 약 81%가 맞았습니다.
+              <b className="font-semibold text-ink">예산서 ↔ 온통청년(지방)</b> — 표본 {fiscal.meta.accuracy?.sample}건. ‘온통청년에 있음’ 자동 판정은 약{" "}
+              {fiscal.meta.accuracy?.presence}%, ‘없음’ 판정은 약 {fiscal.meta.accuracy?.absence}%가 맞았고, 정책별 예산 연결(엄격 기준)은 약{" "}
+              {fiscal.meta.accuracy?.strict}%가 맞았습니다.
               {est && (
                 <>
                   {" "}지방 청년 세부사업 가운데 실제로 온통청년에 없는 비율은 표본을 모집단 크기로 가중해{" "}

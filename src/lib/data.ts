@@ -8,11 +8,13 @@ import execRaw from "../../data/exec.json";
 import vendorsRaw from "../../data/vendors.json";
 import linkRaw from "../../data/link.json";
 import sigunguRaw from "../../data/sigungu-geo.json";
+import qualityRaw from "../../data/quality.json";
 import type {
   ExecData,
   FiscalMeta,
   FiscalProgram,
   LinkData,
+  QualityData,
   Meta,
   Program,
   SidoCollection,
@@ -62,3 +64,6 @@ export const sigunguGeo = sigunguRaw as unknown as {
   type: "FeatureCollection";
   features: { type: "Feature"; properties: { code: string; name: string; sido: string }; geometry: { type: string; coordinates: unknown } }[];
 };
+
+/** 온통청년 자체 데이터 점검 — 매칭 없이 센 것만. */
+export const quality = qualityRaw as unknown as QualityData;

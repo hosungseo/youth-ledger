@@ -201,7 +201,9 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <p className="mt-2 text-[11.5px] text-ink-3">자동 판정(표본 검토 기준 약 72% 정확)</p>
+            <p className="mt-2 text-[11.5px] text-ink-3">
+              자동 판정 · 표본 검토 기준 ‘없음’ 판정의 약 {fiscal.meta.accuracy?.absence}%, ‘있음’ 판정의 약 {fiscal.meta.accuracy?.presence}%가 맞음
+            </p>
           </div>
         </div>
       </section>

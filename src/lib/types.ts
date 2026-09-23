@@ -97,6 +97,8 @@ export interface FiscalMeta {
   /** 청년대장: 온통청년에 대응 정책이 있는 세부사업 수, 없는 비율 표본 추정 */
   inOnthong?: number;
   absentEstimate?: { absentShare: number; ci: number[]; absentBudgetShare: number; ciBudget: number[]; sample: number; population: number };
+  /** 표본 검토로 잰 자동 판정 정확도(%) — scripts/17_accuracy.py */
+  accuracy?: { presence: number; absence: number; strict: number; sample: number; presenceThreshold: number; strictThreshold: number; gov24: { high: number; mid: number; sample: number } };
 }
 
 export interface FiscalProgram {
@@ -305,4 +307,20 @@ export interface MapShape {
   d: string;
   cx: number;
   cy: number;
+}
+
+/** 온통청년 데이터 점검 (scripts/18_quality.py) — counts only, no matching involved. */
+export interface QualityData {
+  total: number;
+  asof: string;
+  timing: { withDates: number; "기간 없음": number; "신청 시작 전 등록": number; "신청 시작 뒤 등록": number; "마감 뒤 등록": number };
+  timing2026: { withDates: number; late: number; medianDaysLate: number | null };
+  delayMedianDays: number | null;
+  lateExamples: { n: string; inst: string; end: string; reg: string; days: number }[];
+  lateBySido: { sido: string; late: number; withDates: number }[];
+  status: { closed: number; closedNoDates: number; openButPast: number; open: number };
+  dup: { clusters: number; entries: number; extra: number };
+  dupTop: { n: string; who: string; count: number; names: string[]; statuses: Record<string, number> }[];
+  crossAgency: { k: string; agencies: number; sample: string[] }[];
+  fields: { k: string; n: number; note?: string }[];
 }

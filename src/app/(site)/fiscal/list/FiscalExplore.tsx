@@ -211,7 +211,7 @@ export default function FiscalExplore({
             온통청년에 있는 것
           </Pill>
           <span className="text-[11.5px] leading-[1.6] text-ink-3">
-            자동 판정입니다(표본 검토 기준 약 72% 정확). 등록기관 확인 목록으로 쓰세요
+            자동 판정입니다(표본 검토 기준 ‘없음’ 판정의 약 {meta.accuracy?.absence}%가 맞음). 등록기관 확인 목록으로 쓰세요
           </span>
         </div>
       </div>
