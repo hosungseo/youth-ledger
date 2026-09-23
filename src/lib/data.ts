@@ -1,0 +1,52 @@
+import "server-only";
+import programsRaw from "../../data/programs.json";
+import metaRaw from "../../data/meta.json";
+import sidoRaw from "../../data/sido.json";
+import fiscalRaw from "../../data/fiscal.json";
+import fiscalProgramsRaw from "../../data/fiscal-programs.json";
+import execRaw from "../../data/exec.json";
+import vendorsRaw from "../../data/vendors.json";
+import type {
+  ExecData,
+  FiscalMeta,
+  FiscalProgram,
+  Meta,
+  Program,
+  SidoCollection,
+  VendorData,
+} from "./types";
+
+export const programs = programsRaw as Program[];
+export const meta = metaRaw as Meta;
+export const sido = sidoRaw as SidoCollection;
+
+/** The same axes read from the budget systems instead of 온통청년. */
+export const fiscal = fiscalRaw as {
+  meta: FiscalMeta;
+  rows: unknown[];
+};
+
+/** 일별 집행 시계열. 지방만 있다 — 중앙은 집행 자료가 없다. */
+export const exec = execRaw as ExecData;
+
+/** 위탁으로 나간 돈에 이름을 붙일 수 있는지 — 계약현황과 맞대 본 결과. */
+export const vendors = vendorsRaw as VendorData;
+
+/** One row per 세부사업, for the 목록 and the 비교. */
+export const fiscalPrograms = fiscalProgramsRaw as FiscalProgram[];
+
+export function getProgram(id: string): Program | undefined {
+  return programs.find((p) => p.id === id);
+}
+
+export function programsByRegion(region: string): Program[] {
+  return programs.filter((p) => p.region === region);
+}
+
+/** Same-type siblings from elsewhere — "다른 지역의 비슷한 사업". */
+export function relatedPrograms(p: Program, limit = 6): Program[] {
+  return programs
+    .filter((q) => q.id !== p.id && q.type === p.type && q.region !== p.region)
+    .sort((a, b) => (b.budget ?? 0) - (a.budget ?? 0))
+    .slice(0, limit);
+}

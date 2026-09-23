@@ -1,0 +1,201 @@
+/* Pretendard — the de-facto Korean UI face; variable build, self-hostable later. */
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+@import "tailwindcss";
+
+/*
+ * 두 기준은 서로 다른 장부다. 그래서 바탕색까지 갈라 둔다 — 공고 기준은 종이,
+ * 재정 기준은 판이다. 아래 토큰은 전부 이름으로만 쓰고(bg-card, text-ink,
+ * bg-wash …) 값은 [data-basis]가 정한다. 어느 장부에 들어와 있는지 글을 읽지
+ * 않아도 알게 하려는 것이다.
+ */
+/*
+ * static이 붙어야 한다. 그냥 @theme이면 Tailwind가 유틸리티 클래스에서 쓰이지
+ * 않는 변수를 지워 버리는데, 유형 색(--color-biz-tile 따위)은 클래스가 아니라
+ * style 속성의 color-mix()에서만 쓰인다. 지워지면 밝은 쪽에서만 값이 사라져
+ * 판의 칸이 통째로 하얗게 비어 버린다 — 아래 [data-basis] 블록은 평범한 CSS라
+ * 살아남는 탓에 어두운 쪽만 멀쩡해서 알아채기도 늦다.
+ */
+@theme static {
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Ground */
+  --color-paper: #fbfbfa; /* 페이지 바탕 */
+  --color-card: #ffffff; /* 올라온 면 */
+  --color-ink: #0b0b0b;
+  --color-ink-2: #55555a;
+  --color-ink-3: #6b6b74;
+  --color-hair: #ececea;
+  --color-onink: #ffffff; /* ink로 채운 버튼 위의 글자 */
+
+  /* 막대 트랙·호버처럼 바탕을 살짝 누르는 면. 불투명이라 어디에 얹혀도 같다. */
+  --color-wash-0: #f5f5f3;
+  --color-wash: #efefec;
+  --color-wash-2: #e4e4e0;
+
+  /* Type accents — one hue per 지원유형 */
+  --color-t-biz: #f87217;
+  --color-t-space: #3b82f7;
+  --color-t-mentor: #9233eb;
+  --color-t-event: #ee4445;
+  --color-t-global: #0d9488;
+  --color-t-loan: #d97706;
+  --color-t-rnd: #7c3bec;
+  --color-t-people: #16a34a;
+
+  /* 유형 4종 세트: tile(연한 면) · fg(글자) · ring(테두리) · fill(막대). */
+  --color-biz-tile: #ffedd9;
+  --color-biz-fg: #c2410c;
+  --color-biz-ring: #fbcfa5;
+  --color-space-tile: #e1f2fe;
+  --color-space-fg: #1d4ed8;
+  --color-space-ring: #b4dbfb;
+  --color-mentor-tile: #f2e9ff;
+  --color-mentor-fg: #7127bc;
+  --color-mentor-ring: #dcc7f8;
+  --color-event-tile: #ffe3e2;
+  --color-event-fg: #be2c2d;
+  --color-event-ring: #f9c3c2;
+  --color-global-tile: #d9f5ef;
+  --color-global-fg: #0f766e;
+  --color-global-ring: #a7e3d6;
+  --color-loan-tile: #fff8c3;
+  --color-loan-fg: #a16207;
+  --color-loan-ring: #f2e08a;
+  --color-rnd-tile: #ede9fe;
+  --color-rnd-fg: #5b27b8;
+  --color-rnd-ring: #cfc3f8;
+  --color-people-tile: #dcfce7;
+  --color-people-fg: #15803d;
+  --color-people-ring: #a9eec1;
+  --color-etc-tile: #f1f1ef;
+  --color-etc-fg: #55555a;
+  --color-etc-ring: #dcdcd8;
+  --color-etc-fill: #8a8a92;
+
+
+  /*
+   * hot — 판의 칸이 가장 진해지는 끝. fill과 따로 두는 이유는 대비 때문이다.
+   * 칸 안에는 숫자가 앉는데, 배경이 tile에서 hot으로 이어지는 동안 글자색은
+   * 하나여야 한다(중간 어디선가 색을 바꾸면 반드시 읽히지 않는 구간이 생긴다).
+   * 그래서 밝은 쪽 hot은 검은 글자가, 어두운 쪽 hot은 흰 글자가 4.5:1을
+   * 넘기는 선에서 멈춘다 — 어두운 판의 hot이 fill보다 가라앉은 건 그 때문이다.
+   */
+  --color-biz-hot: #f87217;
+  --color-space-hot: #3b82f7;
+  --color-mentor-hot: #9d52ef;
+  --color-event-hot: #ee4445;
+  --color-global-hot: #0d9488;
+  --color-loan-hot: #d97706;
+  --color-rnd-hot: #8a5cf1;
+  --color-people-hot: #16a34a;
+  --color-etc-hot: #8a8a92;
+
+  --color-select: #ffe9d6;
+}
+
+/*
+ * 재정 기준으로 들어오면 판 전체가 뒤집힌다. :has()를 쓰는 이유는 바탕을
+ * 칠하는 <html>이 어느 기준인지 서버에서 렌더된 마크업만으로 알아야 하기
+ * 때문이다 — 자바스크립트로 뒤늦게 칠하면 첫 프레임이 하얗게 번쩍인다.
+ */
+:root:has([data-basis="fiscal"]) {
+  color-scheme: dark;
+
+  --color-paper: #0e0f12;
+  --color-card: #17181c;
+  --color-ink: #f3f3f1;
+  --color-ink-2: #a6a6ae;
+  --color-ink-3: #8f8f98;
+  --color-hair: #272930;
+  --color-onink: #0e0f12;
+
+  --color-wash-0: #16171b;
+  --color-wash: #1d1f24;
+  --color-wash-2: #2a2c33;
+
+  /* 어두운 바탕에서는 짙은 글자색이 읽히지 않는다. tile은 내려앉히고 fg는 띄운다. */
+  --color-biz-tile: #3a2211;
+  --color-biz-fg: #fdba74;
+  --color-biz-ring: #5c3418;
+  --color-space-tile: #122340;
+  --color-space-fg: #93c5fd;
+  --color-space-ring: #1d3a63;
+  --color-mentor-tile: #2a1442;
+  --color-mentor-fg: #d8b4fe;
+  --color-mentor-ring: #432066;
+  --color-event-tile: #3a1616;
+  --color-event-fg: #fca5a5;
+  --color-event-ring: #5c2222;
+  --color-global-tile: #0c2e2b;
+  --color-global-fg: #5eead4;
+  --color-global-ring: #134c46;
+  --color-loan-tile: #3a2609;
+  --color-loan-fg: #fcd34d;
+  --color-loan-ring: #5b3c0f;
+  --color-rnd-tile: #241542;
+  --color-rnd-fg: #c4b5fd;
+  --color-rnd-ring: #392266;
+  --color-people-tile: #0f2e1a;
+  --color-people-fg: #86efac;
+  --color-people-ring: #1a4a2a;
+  --color-etc-tile: #1e1f24;
+  --color-etc-fg: #a6a6ae;
+  --color-etc-ring: #33353c;
+  --color-etc-fill: #73737c;
+
+  --color-biz-hot: #b1551a;
+  --color-space-hot: #326dcd;
+  --color-mentor-hot: #9233eb;
+  --color-event-hot: #c93b3c;
+  --color-global-hot: #117c72;
+  --color-loan-hot: #a45d0c;
+  --color-rnd-hot: #7c3bec;
+  --color-people-hot: #18803c;
+  --color-etc-hot: #6e6e75;
+
+  --color-select: #46280f;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  /* Korean breaks mid-어절 by default ("달렸습 / 니다"). keep-all wraps at word
+     boundaries the way Korean is meant to be set. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "tnum";
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease;
+}
+
+/* Tabular figures everywhere a count or a budget is shown. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::selection {
+  background: var(--color-select);
+}
+
+/* Focus ring: visible on keyboard only, never a mouse halo. */
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}

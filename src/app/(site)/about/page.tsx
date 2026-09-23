@@ -1,0 +1,143 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { exec, fiscal, meta } from "@/lib/data";
+
+export const metadata: Metadata = {
+  title: "자료 출처와 한계",
+  description: "청년대장이 무엇을 담고 무엇을 담지 않는지, 연결은 얼마나 정확한지.",
+};
+
+export default function AboutPage() {
+  const est = fiscal.meta.absentEstimate;
+  return (
+    <div className="mx-auto max-w-[720px] px-5 py-12 md:px-8">
+      <h1 className="text-[34px] leading-[1.15] font-bold tracking-[-0.035em] md:text-[44px]">
+        무엇을 담았나
+      </h1>
+      <p className="mt-5 text-[14px] leading-[1.8] text-ink-3">
+        청년대장은 공개 자료로 만든 비공식 개념검증(PoC)입니다. 온통청년·보조금24·지방재정365·열린재정의
+        공식 화면이 아니며, 기관의 공식 입장도 아닙니다.
+      </p>
+
+      <div className="mt-8 space-y-10">
+        <Section title="출처">
+          <ul className="space-y-1.5">
+            <Li>
+              <b className="font-semibold text-ink">온통청년</b> — 공개 정책검색 결과 {meta.total.toLocaleString("ko-KR")}건
+              (중앙부처 {meta.central}건, 지방자치단체 {meta.local.toLocaleString("ko-KR")}건). 화면 첫 표시 건수(약 3,981건)와
+              차이가 있는데, 검색 색인에 들어 있지 않은 등록분으로 보입니다.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">보조금24</b> — 공공데이터포털 「행정안전부_대한민국 공공서비스(혜택) 정보」 목록·상세·지원조건.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">지방재정365</b> — 세부사업별 세출현황(2026, 9월 21일 기준)에서 이름에 청년이 들어간 세부사업.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">열린재정</b> — 세부사업 일별 집행현황(2026, 9월 14일 기준)의 중앙 세부사업.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">집행 추이</b> — 지방재정365를 매주(6월 10일부터 매일) 받아 둔 스냅샷{" "}
+              {exec.meta.days}개에서 누적 지출을 이었습니다.
+            </Li>
+          </ul>
+          <p>
+            담당자 성명·연락처와 등록·수정자 관련 항목은 수집 단계에서 지웠고, 이 사이트에 싣지 않았습니다.
+          </p>
+        </Section>
+
+        <Section title="가공한 부분">
+          <ul className="space-y-1.5">
+            <Li>
+              <b className="font-semibold text-ink">분야</b> — 온통청년은 신·구 분류체계가 섞여 있어(예: {"'복지문화'"}와{" "}
+              {"'금융・복지・문화'"}) 중분류를 여덟 갈래로 다시 묶었습니다. 예산서에는 분야가 없어 사업명으로 추정했고,
+              단서가 없는 센터·공간·운영비는 ‘정책기반’으로 모았습니다.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">지역</b> — 온통청년의 대상 지역 목록으로 시도를 정했습니다. 셋 넘는 시도에 걸친
+              정책과 중앙부처 정책은 ‘중앙’으로 셉니다. 광주·전남은 통합 이후 한 광역이지만, 시·군·구 이름으로 갈라 지도에 얹었습니다.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">신청 시기</b> — 신청 시작일부터 종료일까지 걸친 2026년의 달마다 셉니다.
+              신청기간이 없고 상시도 아닌 {meta.undecided}건은 월별 막대에서 빠집니다.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">예산</b> — 온통청년에는 예산 항목이 없습니다. 이름·대상 지역이 맞는 예산서
+              세부사업이 있는 {(meta.withBudget ?? 0).toLocaleString("ko-KR")}건에만 그 예산현액을 붙였습니다.
+            </Li>
+          </ul>
+        </Section>
+
+        <Section title="연결은 얼마나 정확한가">
+          <p>
+            세 자료에는 서로를 가리키는 공통 번호가 없어, 기관코드·이름·지원내용으로 이었습니다. 그래서 정확도를 따로 쟀습니다 —
+            점수 구간별로 표본을 뽑아, 관점이 다른 검토자 둘이 점수를 보지 않고 판정하고, 엇갈린 것은 원문으로 확정했습니다.
+          </p>
+          <ul className="space-y-1.5">
+            <Li>
+              <b className="font-semibold text-ink">온통청년 ↔ 보조금24</b> — 표본 210쌍. 신뢰도 ‘높음’ 약 98%, ‘중간’ 약 90%가 올바른
+              연결이었습니다(‘중간’에는 시·군 사업을 광역·중앙 상위 서비스에 잇는 경우가 많습니다).
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">예산서 ↔ 온통청년(지방)</b> — 표본 145건. ‘온통청년에 있음/없음’ 자동 판정은 각각 약
+              73%·72%가 맞았고, 정책별 예산 연결(엄격 기준)은 약 81%가 맞았습니다.
+              {est && (
+                <>
+                  {" "}지방 청년 세부사업 가운데 실제로 온통청년에 없는 비율은 표본을 모집단 크기로 가중해{" "}
+                  <b className="font-semibold text-ink">약 {est.absentShare}%(95% 구간 {est.ci[0]}~{est.ci[1]}%)</b>로 추정합니다.
+                </>
+              )}
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">예산서 ↔ 온통청년(중앙)</b> — 건수가 적고 금액이 커서 한 건씩 대조했습니다.
+            </Li>
+          </ul>
+          <p>
+            1:1 연결이 어려운 가장 큰 이유는 온통청년의 중복 등록입니다. 같은 국가사업이 연도·부서·모집 차수별로 이름을 바꿔 여러 번
+            등록돼 있습니다. 정책마다 예산 코드와 보조금24 서비스ID를 등록 단계에서 받으면 이 문제는 사라집니다.
+          </p>
+        </Section>
+
+        <Section title="한계">
+          <ul className="space-y-1.5">
+            {fiscal.meta.caveats.map((c) => (
+              <Li key={c}>{c}</Li>
+            ))}
+            {exec.meta.caveats.map((c) => (
+              <Li key={c}>{c}</Li>
+            ))}
+          </ul>
+        </Section>
+
+        <p className="border-t border-hair pt-6 text-[13px] text-ink-3">
+          틀을 빌려 온 곳 ·{" "}
+          <a href="https://changup.seohosung.com" target="_blank" rel="noreferrer noopener" className="underline underline-offset-2 hover:text-ink">
+            창업대장
+          </a>
+          (같은 방식으로 창업지원사업을 모은 자매 사이트) ·{" "}
+          <Link href="/" className="underline underline-offset-2 hover:text-ink">
+            처음으로
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="text-[13px] font-semibold text-ink-3">{title}</h2>
+      <div className="mt-3 space-y-3 text-[15px] leading-[1.8] text-ink-2">{children}</div>
+    </section>
+  );
+}
+
+function Li({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex gap-2.5">
+      <span className="mt-[10px] h-1 w-1 shrink-0 rounded-full bg-ink-3" aria-hidden />
+      <span>{children}</span>
+    </li>
+  );
+}
