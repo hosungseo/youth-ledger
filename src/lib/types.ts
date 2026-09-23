@@ -261,3 +261,48 @@ export interface VendorData {
     contracts: number;
   }[];
 }
+
+/** 종합 화면: 다섯 자료를 지방재정 지자체코드로 묶은 것 (scripts/15_build_link.py). */
+export interface LinkUnit {
+  code: string;
+  name: string;
+  sido: string;
+  local: string;
+  youthPop: number;
+  budget: number;
+  executed: number;
+  programs: number;
+  absent: number;
+  absentBudget: number;
+  support: number;
+  supportAbsent: number;
+  fund: Record<"국비" | "시도비" | "시군구비" | "기타", number>;
+  policies: number;
+  policiesOwn: number;
+  policiesOpen: number;
+  policiesGov24: number;
+  ageCap: number | null;
+  budgetPerYouth: number | null;
+  policiesPer10k: number | null;
+}
+
+export interface LinkData {
+  asof: { population: string; local: string; onthong: string };
+  units: LinkUnit[];
+  sido: { sido: string; budget: number; youthPop: number; programs: number; absent: number; budgetPerYouth: number | null; fund: Record<string, number> }[];
+  coveragePolicy: { both: number; gov24Only: number; budgetOnly: number; none: number; total: number };
+  coverageFiscal: Record<"지방" | "중앙", Record<string, { n: number; absent: number; bdg: number; absentBdg: number }>>;
+  ageAll: Record<string, number>;
+  unmapped: string[];
+  nationalYouthPop: number;
+}
+
+/** A 시군구 shape already projected on the server — the client only draws it. */
+export interface MapShape {
+  code: string;
+  name: string;
+  sido: string;
+  d: string;
+  cx: number;
+  cy: number;
+}

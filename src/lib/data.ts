@@ -6,10 +6,13 @@ import fiscalRaw from "../../data/fiscal.json";
 import fiscalProgramsRaw from "../../data/fiscal-programs.json";
 import execRaw from "../../data/exec.json";
 import vendorsRaw from "../../data/vendors.json";
+import linkRaw from "../../data/link.json";
+import sigunguRaw from "../../data/sigungu-geo.json";
 import type {
   ExecData,
   FiscalMeta,
   FiscalProgram,
+  LinkData,
   Meta,
   Program,
   SidoCollection,
@@ -50,3 +53,12 @@ export function relatedPrograms(p: Program, limit = 6): Program[] {
     .sort((a, b) => (b.budget ?? 0) - (a.budget ?? 0))
     .slice(0, limit);
 }
+
+/** 종합 화면 — 온통청년·보조금24·지방재정365·열린재정·KOSIS 인구를 지자체 단위로 묶은 것. */
+export const link = linkRaw as unknown as LinkData;
+
+/** SGIS 2020 시군구 경계(현행 지자체만). 서버에서만 투영해 쓴다. */
+export const sigunguGeo = sigunguRaw as unknown as {
+  type: "FeatureCollection";
+  features: { type: "Feature"; properties: { code: string; name: string; sido: string }; geometry: { type: string; coordinates: unknown } }[];
+};

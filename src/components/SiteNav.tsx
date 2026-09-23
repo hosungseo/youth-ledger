@@ -59,7 +59,16 @@ export default function SiteNav() {
             })}
           </nav>
 
-          <div className="hidden shrink-0 md:block">
+          <div className="hidden shrink-0 items-center gap-5 md:flex">
+            <Link
+              href="/link"
+              aria-current={pathname === "/link" ? "page" : undefined}
+              className={`text-[13px] transition-colors ${
+                pathname === "/link" ? "font-semibold text-ink" : "text-ink-2 hover:text-ink"
+              }`}
+            >
+              종합
+            </Link>
             <Link
               href="/about"
               aria-current={pathname === "/about" ? "page" : undefined}
@@ -136,6 +145,9 @@ export default function SiteNav() {
             <div className="mt-2 flex gap-6 border-t border-hair pt-3 pb-2">
               <Link href="/" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 두 기준 견주기
+              </Link>
+              <Link href="/link" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
+                종합
               </Link>
               <Link href="/about" onClick={() => setOpen(false)} className="text-[14px] text-ink-2">
                 자료

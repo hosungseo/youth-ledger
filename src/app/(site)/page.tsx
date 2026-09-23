@@ -122,6 +122,24 @@ export default function Home() {
         건수 차이가 곧 누락 수는 아닙니다. 실제로 온통청년에 없는 비율은 표본 검토로 따로 추정했습니다.
       </p>
 
+      <Link
+        href="/link"
+        className="group mt-8 flex flex-wrap items-center justify-between gap-4 rounded-[20px] border border-hair bg-card p-6 transition-shadow hover:shadow-[0_8px_28px_rgba(0,0,0,0.09)]"
+      >
+        <span>
+          <span className="block text-[12px] font-semibold text-ink-3">종합 · 다섯 장부를 한 장에</span>
+          <span className="mt-1 block text-[18px] font-bold tracking-[-0.02em]">
+            청년 1인당 예산 지도, 온통청년 등록의 광역 격차, 재원 구성, 청년 나이 정의
+          </span>
+          <span className="mt-1 block text-[13px] text-ink-2">
+            온통청년 · 보조금24 · 지방재정365 · 열린재정 · KOSIS 인구를 시·군·구 단위로 묶었습니다.
+          </span>
+        </span>
+        <span className="text-[14px] font-semibold" aria-hidden>
+          종합 보기 <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+        </span>
+      </Link>
+
       {/* Local governments: same layer on both sides (individual programs). */}
       <section className="mt-14 rounded-[20px] border border-hair bg-card p-7 md:p-9">
         <h2 className="text-[13px] font-semibold text-ink-3">지방자치단체만 견주면</h2>

@@ -37,6 +37,12 @@ export default function AboutPage() {
               <b className="font-semibold text-ink">열린재정</b> — 세부사업 일별 집행현황(2026, 9월 14일 기준)의 중앙 세부사업.
             </Li>
             <Li>
+              <b className="font-semibold text-ink">KOSIS 주민등록인구</b> — 행정구역(읍면동)별/5세별 주민등록인구에서 20~39세를 청년 인구로 셌습니다(종합 화면의 청년 1인당 예산). 정책의 청년 정의는 대개 19~39세라 조금 다릅니다.
+            </Li>
+            <Li>
+              <b className="font-semibold text-ink">지도 경계</b> — SGIS 2020 시군구 경계. 2026년 신설된 인천 영종·제물포·서해·검단구는 경계가 없어 지도에서 비어 있습니다.
+            </Li>
+            <Li>
               <b className="font-semibold text-ink">집행 추이</b> — 지방재정365를 매주(6월 10일부터 매일) 받아 둔 스냅샷{" "}
               {exec.meta.days}개에서 누적 지출을 이었습니다.
             </Li>
