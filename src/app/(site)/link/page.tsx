@@ -32,6 +32,8 @@ export default function LinkPage() {
   const localBudget = L.units.reduce((s, u) => s + u.budget, 0);
   const perYouthNational = (localBudget * 1e8) / L.nationalYouthPop;
   const est = local.absentEstimate;
+  const kindEst = est?.byKind;
+  const g24 = L.gov24Absence;
   const cp = L.coveragePolicy;
   const centralBdg = Object.values(cf["중앙"]).reduce((s, v) => s + v.bdg, 0);
   const localN = Object.values(cf["지방"]).reduce((s, v) => s + v.n, 0);
@@ -155,7 +157,10 @@ export default function LinkPage() {
 
         <h3 className="mt-10 text-[15px] font-bold tracking-[-0.02em]">거꾸로, 예산서의 청년 세부사업은 온통청년에 있나</h3>
         <p className="mt-1.5 max-w-[680px] text-[12.5px] leading-[1.7] text-ink-3">
-          지방 청년 세부사업을 성격별로 나눴습니다. 청년이 직접 신청하는 ‘대상자 지원형’도 상당수가 온통청년에 없습니다(자동 판정, ‘없음’ 판정의 약 {local.accuracy?.absence}%가 맞음).
+          지방 청년 세부사업을 성격별로 나눴습니다. 표본 검토로 추정하면 청년이 직접 신청하는 ‘대상자 지원형’은{" "}
+          <b className="font-semibold text-ink-2">약 {kindEst?.["대상자 지원"]?.share ?? "—"}%</b>(95% 구간 {kindEst?.["대상자 지원"]?.ci.join("~")}%), 센터 운영·시설 같은 ‘기반·운영형’은
+          약 {kindEst?.["기반·운영"]?.share ?? "—"}%가 온통청년에 없습니다. 기반·운영형은 등록 대상인지부터 정해야 하므로 인벤토리의 첫 목표는 대상자 지원형입니다.
+          막대는 건별 자동 판정입니다(‘없음’ 판정의 약 {local.accuracy?.absence}%가 맞음).
         </p>
         <div className="mt-4 rounded-[20px] border border-hair bg-card p-6">
           <StackedBars
@@ -173,6 +178,19 @@ export default function LinkPage() {
             format="count"
           />
         </div>
+
+        {g24 && (
+          <>
+            <h3 className="mt-10 text-[15px] font-bold tracking-[-0.02em]">보조금24 쪽에서 보면</h3>
+            <p className="mt-1.5 max-w-[680px] text-[12.5px] leading-[1.7] text-ink-3">
+              보조금24에서 청년 관련으로 잡히는 서비스 가운데 온통청년과 자동으로 이어지지 않는 {g24.population.toLocaleString("ko-KR")}건을 표본{" "}
+              {g24.sample}건으로 하나씩 찾아봤습니다(AI 검색·판정). 약 3분의 1은 청년이 주 대상이 아닌 일반 서비스(전세사기 피해 지원·공공근로 등)였고, 청년 대상
+              서비스 중에서는 약 {Math.round(g24.absentAmongYouth)}%가 온통청년에 실제로 없었습니다 —{" "}
+              <b className="font-semibold text-ink-2">약 {g24.absentYouthN.toLocaleString("ko-KR")}건</b>(95% 구간 {g24.absentYouthNCi[0]}~{g24.absentYouthNCi[1]}건).
+              표본 {g24.sample}건 중 {g24.missedByMatcher}건은 온통청년에 있는데 자동 대조가 놓친 것으로, 공통 번호 없이는 자동 연결에도 한계가 있습니다.
+            </p>
+          </>
+        )}
       </section>
 
       {/* map */}
@@ -196,7 +214,7 @@ export default function LinkPage() {
       <section className="mt-16">
         <h2 className="text-[22px] font-bold tracking-[-0.025em]">온통청년 등록 여부는 광역에 따라 크게 갈립니다</h2>
         <p className="mt-2 max-w-[700px] text-[14px] leading-[1.8] text-ink-2">
-          청년 세부사업이 5건 넘는 시·군·구 {eligible.length}곳의 ‘온통청년에 없는 비율’은 어느 광역에 속하느냐가 차이의{" "}
+          청년 세부사업이 5건 이상인 시·군·구 {eligible.length}곳의 ‘온통청년에 없는 비율’은 어느 광역에 속하느냐가 차이의{" "}
           <b className="font-semibold text-ink">약 {Math.round(eta2 * 100)}%</b>를 설명합니다 — {stripRows[0].label}은 중앙값{" "}
           {Math.round(stripRows[0].median * 100)}%, {stripRows[stripRows.length - 1].label}은{" "}
           {Math.round(stripRows[stripRows.length - 1].median * 100)}%입니다. 청년 1인당 예산과의 순위상관은{" "}

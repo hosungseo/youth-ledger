@@ -59,7 +59,7 @@ export default function FiscalPlatePage() {
           대응 정책을 찾지 못했습니다.
           {est && (
             <>
-              {" "}자동 판정은 틀리기도 하므로 표본 {est.sample}건을 두 검토자가 다시 봤고, 지방 청년 세부사업의{" "}
+              {" "}자동 판정은 틀리기도 하므로 표본 {est.sample}건을 AI가 관점을 나눠 두 번 다시 판정했고(엇갈린 건은 원문 대조, 사람 확인은 추가 예정), 지방 청년 세부사업의{" "}
               <b className="font-semibold text-ink">약 {est.absentShare}%</b>(95% 구간 {est.ci[0]}~{est.ci[1]}%)가
               실제로 온통청년에 없다고 추정했습니다.
             </>

@@ -96,7 +96,11 @@ export interface FiscalMeta {
   caveats: string[];
   /** 청년대장: 온통청년에 대응 정책이 있는 세부사업 수, 없는 비율 표본 추정 */
   inOnthong?: number;
-  absentEstimate?: { absentShare: number; ci: number[]; absentBudgetShare: number; ciBudget: number[]; sample: number; population: number };
+  absentEstimate?: {
+    absentShare: number; ci: number[]; absentBudgetShare: number; ciBudget: number[]; sample: number; population: number;
+    /** 성격별 표본 추정(도메인 추정) — scripts/13_absence_estimate.py */
+    byKind?: Record<string, { share: number; ci: number[]; sample: number }>;
+  };
   /** 표본 검토로 잰 자동 판정 정확도(%) — scripts/17_accuracy.py */
   accuracy?: { presence: number; absence: number; strict: number; sample: number; presenceThreshold: number; strictThreshold: number; gov24: { high: number; mid: number; sample: number } };
 }
@@ -297,6 +301,8 @@ export interface LinkData {
   ageAll: Record<string, number>;
   unmapped: string[];
   nationalYouthPop: number;
+  /** 보조금24 청년 관련 서비스 중 온통청년에 없는 것 — 표본 수기 검토 추정 (scripts/19_g24_absence.py) */
+  gov24Absence?: { population: number; sample: number; notYouth: number; youthTargetedShare: number; absentAmongYouth: number; absentAmongYouthCi: number[]; absentYouthN: number; absentYouthNCi: number[]; missedByMatcher: number };
 }
 
 /** A 시군구 shape already projected on the server — the client only draws it. */
@@ -315,12 +321,26 @@ export interface QualityData {
   asof: string;
   timing: { withDates: number; "기간 없음": number; "신청 시작 전 등록": number; "신청 시작 뒤 등록": number; "마감 뒤 등록": number };
   timing2026: { withDates: number; late: number; medianDaysLate: number | null };
+  /** late registration split by deadline season, monthly registrations, the September catch-up */
+  timingSeason: {
+    janApr: { n: number; late: number };
+    mayOn: { n: number; late: number };
+    regsByMonth2026: number[];
+    regsByMonth2025: number[];
+    catchUp: { from: string; n: number; central: number; lateAmong: number };
+  };
   delayMedianDays: number | null;
   lateExamples: { n: string; inst: string; end: string; reg: string; days: number }[];
   lateBySido: { sido: string; late: number; withDates: number }[];
   status: { closed: number; closedNoDates: number; openButPast: number; open: number };
-  dup: { clusters: number; entries: number; extra: number };
-  dupTop: { n: string; who: string; count: number; names: string[]; statuses: Record<string, number> }[];
+  /** one program, many entries — extra entries split exactly into year / area / round / same */
+  dup: { clusters: number; entries: number; extra: number; byYear: number; byArea: number; byRound: number; same: number; openDup: number; openDupClusters: number };
+  dupTop: { n: string; who: string; count: number; names: string[]; statuses: Record<string, number>; years: number; areas: number }[];
   crossAgency: { k: string; agencies: number; sample: string[] }[];
+  registrars: { sido: string; total: number; honcheong: number }[];
+  apply: { noUrl: number; noneAtAll: number; open: number; openWithUrl: number; openNoneAtAll: number; reg2026: number; reg2026NoneAtAll: number };
+  scale: { blank: number; flagY: number; flagYBlank: number; flagNBlank: number };
+  legacy: { plan1: number; plan1Before2026: number; plan1Open: number; oldCat: number; oldCatBefore2026: number; oldCatOpen: number; closedNoDates: number; closedNoDatesBefore2026: number; closedNoDatesWithBizPeriod: number };
+  taskNo: { filled: number; plan2: number };
   fields: { k: string; n: number; note?: string }[];
 }
